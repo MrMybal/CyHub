@@ -18,11 +18,12 @@ struct Package {
 };
 
 struct Project {
-    std::string id, name, category, description, repo;
+    std::string id, name, category, description, description_en, repo;
     std::optional<Package> windows_x64;
     std::string skill;
     bool include_prerelease = false;
     std::string url() const;
+    const std::string& description_for(std::string_view language) const;
 };
 
 using Catalog = std::vector<Project>;
@@ -53,6 +54,9 @@ bool valid_digest(std::string_view value);
 bool portable_path(std::string_view value);
 std::string fold(std::string_view value);
 bool matches(const Project& project, std::string_view query);
+std::string_view category_for(std::string_view category, std::string_view language);
+std::string load_language(const fs::path& file);
+void save_language(const fs::path& file, std::string_view language);
 bool newer_version(std::string_view installed, std::string_view candidate);
 std::string package_entry(const Package& package, std::string_view tag);
 std::optional<Release> parse_release(const Project& project, const Json& data);

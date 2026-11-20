@@ -58,7 +58,7 @@ void run_service() {
         try {
             const auto job = update_job(root, project);
             if (job.phase == "queued" || job.phase == "checking" || job.phase == "downloading" || job.phase == "verifying")
-                set_job(root, project, "error", "Mise à jour interrompue. Tu peux la relancer.");
+                set_job(root, project, "error", "The update was interrupted. You can try again.");
         } catch (const std::exception& error) {
             log_error(error);
         }
@@ -98,14 +98,14 @@ void run_service() {
     try {
         serve_updates(stop_event, [&](const Json& input) -> Json {
             if (!input.is_object() || input.size() != 2)
-                throw std::runtime_error("Demande invalide.");
+                throw std::runtime_error("Invalid request.");
             const auto* project = find_project(catalog, input.at("project").get<std::string>());
             const auto tag = input.at("tag").get<std::string>();
             if (!project || !project->windows_x64 || !newer_version("", tag))
-                throw std::runtime_error("Aucun paquet correspondant dans le catalogue du service.");
+                throw std::runtime_error("The service catalog has no matching package.");
             std::lock_guard lock(mutex);
             if (busy)
-                throw std::runtime_error("Une installation est déjà en cours.");
+                throw std::runtime_error("An installation is already in progress.");
             set_job(root, *project, "queued");
             pending = Request{project, tag};
             busy = true;

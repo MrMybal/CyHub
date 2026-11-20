@@ -5,6 +5,7 @@
 #include <imgui_impl_sdlrenderer3.h>
 
 #include "dashboard.hpp"
+#include "localization.hpp"
 
 namespace {
 void apply_theme() {
@@ -30,20 +31,23 @@ void apply_theme() {
     cyui::loadFonts();
 }
 
-int run(SDL_Window* window, SDL_Renderer* renderer, int frame_limit, const char* snapshot) {
+int run(SDL_Window* window, SDL_Renderer* renderer, const cyhub::fs::path& preferences,
+        int frame_limit, const char* snapshot) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     auto& io = ImGui::GetIO();
     io.IniFilename = nullptr;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     apply_theme();
+    cyhub::register_ui_translations();
+    cyui::setLocale(cyhub::load_language(preferences).c_str());
     const bool platform_ready = ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     const bool renderer_ready = platform_ready && ImGui_ImplSDLRenderer3_Init(renderer);
     int result = 0;
     try {
         if (!renderer_ready)
-            throw std::runtime_error("Initialisation du moteur d’affichage impossible.");
-        cyhub::Dashboard dashboard(renderer);
+            throw std::runtime_error("Could not initialize the renderer.");
+        cyhub::Dashboard dashboard(renderer, preferences);
         bool active = true;
         float scale = 0;
         int frames = 0;
@@ -91,7 +95,7 @@ int run(SDL_Window* window, SDL_Renderer* renderer, int frame_limit, const char*
         if (frame_limit)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", error.what());
         else
-            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "CyHub", error.what(), window);
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "CyHub", cyhub::localized_diagnostic(error.what()).c_str(), window);
         result = 1;
     }
     if (renderer_ready)
@@ -119,7 +123,16 @@ int main(int argc, char** argv) {
             SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &renderer)) {
         SDL_SetWindowMinimumSize(window, 790, 560);
         const bool vsync = SDL_SetRenderVSync(renderer, 1);
-        result = run(window, renderer, smoke ? 8 : 0, smoke && argc > 2 ? argv[2] : nullptr);
+        cyhub::fs::path preferences;
+        if (smoke) {
+            if (argc > 3)
+                preferences = cyhub::fs::u8path(argv[3]);
+        } else {
+            const std::unique_ptr<char, decltype(&SDL_free)> directory(SDL_GetPrefPath("CyHub", "CyHub"), SDL_free);
+            if (directory)
+                preferences = cyhub::fs::u8path(directory.get()) / "settings.json";
+        }
+        result = run(window, renderer, preferences, smoke ? 8 : 0, smoke && argc > 2 ? argv[2] : nullptr);
         (void)vsync;
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);

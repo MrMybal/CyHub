@@ -155,9 +155,9 @@ std::optional<Release> latest_release(const Project& project, const Cancellation
     const auto quota = response.headers.find("x-ratelimit-remaining");
     if (response.status == 429 || (response.status == 403 &&
         (response.headers.contains("retry-after") || (quota != response.headers.end() && quota->second == "0"))))
-        throw cymcp::Error("GitHubLimit", "GitHub limite les requêtes. Réessaye plus tard.");
+        throw cymcp::Error("GitHubLimit", "GitHub rate limit reached. Try again later.");
     if (response.status != 200)
-        throw std::runtime_error("GitHub a répondu HTTP " + std::to_string(response.status) + ".");
+        throw std::runtime_error("GitHub returned HTTP " + std::to_string(response.status) + ".");
     const auto data = cymcp::parse_json(response.body);
     if (project.include_prerelease)
         return data.empty() ? std::nullopt : parse_release(project, data.at(0));
@@ -181,9 +181,9 @@ cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cance
         if (next == response.headers.end() ||
             (!next->second.starts_with("https://release-assets.githubusercontent.com/") &&
              !next->second.starts_with("https://objects.githubusercontent.com/")))
-            throw std::runtime_error("Redirection de téléchargement refusée.");
+            throw std::runtime_error("Download redirect refused.");
         request.url = next->second;
     }
-    throw std::runtime_error("Trop de redirections de téléchargement.");
+    throw std::runtime_error("Too many download redirects.");
 }
 }

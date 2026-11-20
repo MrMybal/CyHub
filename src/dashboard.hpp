@@ -13,7 +13,7 @@ struct SDL_Texture;
 namespace cyhub {
 class Dashboard {
 public:
-    explicit Dashboard(SDL_Renderer* renderer);
+    Dashboard(SDL_Renderer* renderer, fs::path preferences);
     ~Dashboard();
     void render();
 
@@ -35,6 +35,7 @@ private:
     void check_projects(std::vector<Project> projects);
     void collect_checks();
     void sidebar();
+    void language_picker();
     void hero();
     void project_list();
     void detail();
@@ -44,7 +45,7 @@ private:
     bool ready(const Status& status) const;
 
     Catalog catalog_;
-    fs::path root_;
+    fs::path root_, preferences_;
     std::map<std::string, std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)>> icons_;
     std::map<std::string, Status> status_;
     std::vector<std::string> categories_;

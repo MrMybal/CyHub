@@ -42,7 +42,7 @@ template <typename Io>
 bool transfer(HANDLE pipe, HANDLE stop, DWORD wait, DWORD& transferred, Io operation) {
     Handle event{CreateEventW(nullptr, TRUE, FALSE, nullptr)};
     if (!event.value)
-        fail("Événement du service");
+        fail("Creating the service event");
     OVERLAPPED state{};
     state.hEvent = event.value;
     if (operation(state, transferred))
@@ -88,26 +88,26 @@ bool updater_running() {
 void request_update(const Project& project, std::string_view tag) {
     const auto expected_pid = service_pid();
     if (!expected_pid)
-        throw std::runtime_error("Le service CyHub Updater est arrêté ou absent.");
+        throw std::runtime_error("CyHub Updater is stopped or missing.");
     if (!WaitNamedPipeW(pipe_name, timeout))
-        throw std::runtime_error("Le service est temporairement indisponible.");
+        throw std::runtime_error("The service is temporarily unavailable.");
     Handle pipe{CreateFileW(pipe_name, FILE_GENERIC_READ | FILE_WRITE_DATA, 0, nullptr, OPEN_EXISTING,
                             FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION, nullptr)};
     if (pipe.value == INVALID_HANDLE_VALUE)
-        fail("Connexion au service");
+        fail("Connecting to the service");
     ULONG pid = 0;
     if (!GetNamedPipeServerProcessId(pipe.value, &pid) || pid != expected_pid || pid != service_pid())
-        throw std::runtime_error("Impossible de vérifier l’identité du service.");
+        throw std::runtime_error("Could not verify the service identity.");
 
     if (!write_message(pipe.value, nullptr, Json{{"project", project.id}, {"tag", tag}}.dump()))
-        throw std::runtime_error("La demande n’a pas pu être envoyée.");
+        throw std::runtime_error("Could not send the request.");
     const auto response = read_message(pipe.value, nullptr);
     if (response.empty())
-        throw std::runtime_error("Le service n’a pas répondu.");
+        throw std::runtime_error("The service did not respond.");
     write_message(pipe.value, nullptr, "1");
     const auto data = cymcp::parse_json(response, max_message);
     if (!data.value("accepted", false))
-        throw std::runtime_error(data.value("detail", "Mise à jour refusée."));
+        throw std::runtime_error(data.value("detail", "The update was refused."));
 }
 
 void serve_updates(HANDLE stop, const std::function<Json(const Json&)>& handler,
@@ -116,7 +116,7 @@ void serve_updates(HANDLE stop, const std::function<Json(const Json&)>& handler,
     if (!ConvertStringSecurityDescriptorToSecurityDescriptorW(
             L"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;LS)(A;;0x12008B;;;IU)",
             SDDL_REVISION_1, &descriptor, nullptr))
-        fail("Autorisations du service");
+        fail("Setting service permissions");
     const std::unique_ptr<void, decltype(&LocalFree)> security(descriptor, LocalFree);
     SECURITY_ATTRIBUTES attributes{sizeof(attributes), descriptor, FALSE};
     Handle pipe{CreateNamedPipeW(pipe_name, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
@@ -124,7 +124,7 @@ void serve_updates(HANDLE stop, const std::function<Json(const Json&)>& handler,
                                 PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_REJECT_REMOTE_CLIENTS,
                                 1, max_message, max_message, 0, &attributes)};
     if (pipe.value == INVALID_HANDLE_VALUE)
-        fail("Création du canal du service");
+        fail("Creating the service pipe");
     ready();
     while (WaitForSingleObject(stop, 0) == WAIT_TIMEOUT) {
         DWORD unused = 0;

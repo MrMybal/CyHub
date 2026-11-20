@@ -23,7 +23,7 @@ CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions int
 >
 > The desktop app and update service target Windows x64. See the [version notes and limitations](VERSION.md).
 
-[![CyHub catalog showing project icons and the selected project's details](assets/screenshots/catalogue.png)](assets/screenshots/catalogue.png)
+[![English CyHub catalog with project icons, the language picker and project details](assets/screenshots/catalog.png)](assets/screenshots/catalog.png)
 
 ## The CyHub catalog
 
@@ -37,7 +37,9 @@ CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions int
 
 After building the package below, open `CyHub.exe` in `dist/CyHub`. The Windows binaries use the Microsoft Visual C++ x64 runtime.
 
-To enable managed installs, close CyHub, open PowerShell x64 as administrator and run `Install-CyHub.ps1` from `dist/CyHub`. Then launch `%ProgramFiles%\CyHub\CyHub.exe`. Use **Aide** or press **F1** to open the local manual.
+CyHub starts in English. Use **Language** in the sidebar to switch to French. CyHub remembers your choice.
+
+To enable managed installs, close CyHub, open PowerShell x64 as administrator and run `Install-CyHub.ps1` from `dist/CyHub`. Then launch `%ProgramFiles%\CyHub\CyHub.exe`. Use **Help** or press **F1** to open the local manual in the selected language.
 
 ## Source and build
 

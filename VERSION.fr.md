@@ -8,6 +8,7 @@
 
 - Catalogue CyUI avec recherche pour les applications, bibliothèques, SDK et extensions.
 - Icônes des projets lorsqu’elles sont disponibles.
+- Interface de bureau en anglais par défaut, avec préférence de langue anglais ou français mémorisée.
 - Vérification des publications GitHub, installation de paquets vérifiés et service de mise à jour Windows x64.
 - Outils stdio via CyMCPSDK et skills fournis pour les projets.
 - Manuel CyDoc hors ligne en français et en anglais, accessible par **Aide** ou **F1**.

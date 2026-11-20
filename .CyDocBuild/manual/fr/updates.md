@@ -5,7 +5,7 @@ description: Consulter les publications GitHub et installer les paquets Windows 
 section: CyHub
 parent: overview
 order: 3
-sourceRevision: 1
+sourceRevision: 2
 ---
 
 ## Vérifier les versions {#check}

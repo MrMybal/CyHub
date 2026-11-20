@@ -25,13 +25,13 @@ void write_state(const fs::path& path, const Json& json) {
         stream << json.dump(-1, ' ', false, Json::error_handler_t::replace);
         stream.close();
         if (!stream)
-            throw std::runtime_error("Écriture de l’état impossible.");
+            throw std::runtime_error("Could not write the update state.");
     }
     for (int retries = 0; !MoveFileExW(pending.path.c_str(), path.c_str(),
              MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH); ++retries) {
         const auto error = GetLastError();
         if (retries >= 12 || (error != ERROR_ACCESS_DENIED && error != ERROR_SHARING_VIOLATION))
-            throw std::system_error(error, std::system_category(), "Publication de l’état");
+            throw std::system_error(error, std::system_category(), "Publishing the update state");
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
 }
@@ -79,11 +79,11 @@ void extract_archive(const fs::path& archive, const fs::path& directory, const C
     reader.zip.m_pRead = &ZipReader::read;
     reader.zip.m_pIO_opaque = &reader;
     if (!reader.stream || !mz_zip_reader_init(&reader.zip, fs::file_size(archive), 0))
-        throw std::runtime_error("Le fichier ZIP est illisible.");
+        throw std::runtime_error("The ZIP file is unreadable.");
 
     const auto count = mz_zip_reader_get_num_files(&reader.zip);
     if (count == 0 || count > 30000)
-        throw std::runtime_error("Nombre de fichiers ZIP hors limites.");
+        throw std::runtime_error("The ZIP contains an unsupported number of entries.");
 
     constexpr std::uint64_t total_limit = 2ULL * 1024 * 1024 * 1024;
     std::uint64_t total = 0;
@@ -91,20 +91,20 @@ void extract_archive(const fs::path& archive, const fs::path& directory, const C
         cancel.check();
         mz_zip_archive_file_stat stat{};
         if (!mz_zip_reader_file_stat(&reader.zip, i, &stat) || stat.m_uncomp_size > total_limit - total)
-            throw std::runtime_error("Taille décompressée du ZIP hors limites.");
+            throw std::runtime_error("The ZIP exceeds the unpacked size limit.");
         total += stat.m_uncomp_size;
 
         std::array<char, 512> name{};
         const auto name_size = mz_zip_reader_get_filename(&reader.zip, i, name.data(), static_cast<mz_uint>(name.size()));
         if (name_size < 2 || name_size > name.size() || std::char_traits<char>::length(name.data()) != name_size - 1)
-            throw std::runtime_error("Nom de fichier ZIP invalide.");
+            throw std::runtime_error("Invalid ZIP entry name.");
         std::string_view relative(name.data(), name_size - 1);
         if (stat.m_is_directory && relative.ends_with('/'))
             relative.remove_suffix(1);
         const auto unix_type = (stat.m_external_attr >> 16) & 0170000;
         const bool regular = unix_type == 0 || unix_type == (stat.m_is_directory ? 0040000 : 0100000);
         if (!portable_path(relative) || !regular || (stat.m_external_attr & FILE_ATTRIBUTE_REPARSE_POINT))
-            throw std::runtime_error("Le ZIP contient une entrée non prise en charge.");
+            throw std::runtime_error("The ZIP contains an unsupported entry.");
 
         const auto destination = directory / fs::u8path(relative);
         if (stat.m_is_directory) {
@@ -113,23 +113,23 @@ void extract_archive(const fs::path& archive, const fs::path& directory, const C
         }
         fs::create_directories(destination.parent_path());
         if (fs::exists(destination))
-            throw std::runtime_error("Le ZIP contient plusieurs fichiers portant le même nom.");
+            throw std::runtime_error("The ZIP contains duplicate file names.");
         ExtractFile file{std::ofstream(destination, std::ios::binary | std::ios::trunc), cancel};
         if (!file.stream || !mz_zip_reader_extract_to_callback(&reader.zip, i, &ExtractFile::write, &file, 0))
-            throw std::runtime_error("Impossible d’extraire un fichier du ZIP.");
+            throw std::runtime_error("Could not extract a file from the ZIP.");
         file.stream.close();
         if (!file.stream)
-            throw std::runtime_error("Impossible d’enregistrer un fichier du ZIP.");
+            throw std::runtime_error("Could not save a file from the ZIP.");
     }
 }
 
 void activate_archive(const fs::path& root, const Project& project, const Release& release,
                       const fs::path& archive, const Cancellation& cancel) {
     if (!release.asset || !project.windows_x64 || !valid_digest(release.asset->sha256))
-        throw std::runtime_error("Paquet Windows non vérifiable.");
+        throw std::runtime_error("The Windows package cannot be verified.");
     const auto& asset = *release.asset;
     if (!asset.size || asset.size > max_archive_size || fs::file_size(archive) != asset.size)
-        throw std::runtime_error("Taille du paquet différente de la publication GitHub.");
+        throw std::runtime_error("The package size differs from the GitHub release.");
 
     std::ifstream stream(archive, std::ios::binary);
     picosha2::hash256_one_by_one digest;
@@ -140,14 +140,14 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
     }
     digest.finish();
     if (stream.bad() || !stream.eof() || picosha2::get_hash_hex_string(digest) != asset.sha256)
-        throw std::runtime_error("L’empreinte SHA-256 ne correspond pas à la publication GitHub.");
+        throw std::runtime_error("The SHA-256 checksum does not match the GitHub release.");
     stream.close();
 
     const auto project_root = root / project.id;
     const auto final = project_root / "versions" / asset.sha256;
     const auto name = package_entry(*project.windows_x64, release.tag);
     if (!portable_path(name))
-        throw std::runtime_error("Point d’entrée du paquet invalide.");
+        throw std::runtime_error("Invalid package entry point.");
     const auto entry = fs::u8path(name);
 
     if (!fs::exists(final)) {
@@ -159,13 +159,13 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
         else
             fs::copy_file(archive, staging.path / entry);
         if (!fs::is_regular_file(staging.path / entry))
-            throw std::runtime_error("Le fichier principal est absent du paquet.");
+            throw std::runtime_error("The main file is missing from the package.");
         cancel.check();
         fs::create_directories(final.parent_path());
         fs::rename(staging.path, final);
     }
     if (!fs::is_regular_file(final / entry))
-        throw std::runtime_error("Le dossier de version est incomplet.");
+        throw std::runtime_error("The version directory is incomplete.");
     cancel.check();
     write_state(project_root / "current.json", {{"version", release.tag}, {"digest", asset.sha256}});
 }
@@ -174,25 +174,25 @@ void install_release(const fs::path& root, const Project& project, std::string_v
     set_job(root, project, "checking");
     const auto release = latest_release(project, cancel);
     if (!release || release->tag != tag || !release->asset)
-        throw std::runtime_error("Le paquet demandé a changé ou n’est plus disponible.");
+        throw std::runtime_error("The requested package changed or is unavailable.");
     const auto current = installed_version(root, project);
     if (current && current->version == tag)
         return;
     if (current && !newer_version(current->version, tag))
-        throw std::runtime_error("Cette version est antérieure à l’installation active.");
+        throw std::runtime_error("This version is older than the active installation.");
 
     set_job(root, project, "downloading");
     Scratch archive{root / project.id / "pending.package"};
     std::ofstream output(archive.path, std::ios::binary | std::ios::trunc);
     if (!output)
-        throw std::runtime_error("Impossible de créer le fichier de téléchargement.");
+        throw std::runtime_error("Could not create the download file.");
     const auto response = download_asset(*release->asset, cancel, [&](const char* bytes, std::size_t count) {
         output.write(bytes, static_cast<std::streamsize>(count));
         return static_cast<bool>(output);
     });
     output.close();
     if (response.status != 200 || !output)
-        throw std::runtime_error("Téléchargement incomplet ou refusé (HTTP " + std::to_string(response.status) + ").");
+        throw std::runtime_error("Download incomplete or refused (HTTP " + std::to_string(response.status) + ").");
     cancel.check();
     set_job(root, project, "verifying");
     activate_archive(root, project, *release, archive.path, cancel);

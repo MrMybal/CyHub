@@ -8,9 +8,10 @@
 
 - Searchable CyUI catalog for applications, libraries, SDKs and extensions.
 - Project artwork where available.
+- English-first desktop interface with a saved English or French preference.
 - GitHub release checks, verified package installation and a Windows x64 update service.
 - CyMCPSDK stdio tools and bundled project skills.
-- English and French offline CyDoc manual, available from the Aide button or F1.
+- English and French offline CyDoc manual, available from Help or F1.
 
 ## Current limitations
 

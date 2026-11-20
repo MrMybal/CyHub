@@ -5,7 +5,7 @@ description: Connect CyHub to an AI client and read a project guide.
 section: CyHub
 parent: overview
 order: 4
-revision: 1
+revision: 2
 ---
 
 ## Connect an MCP client {#connect}
@@ -23,4 +23,4 @@ Use an ID returned by the list methods to request an update check or a skill. Th
 
 ## Use a project skill {#skills}
 
-Choose **Skills MCP**, select a project, and click **Lire le skill**. Copy the Markdown or open the corresponding `skills/<name>/SKILL.md` file from the package. Each guide describes how to find and connect to that project's own tools.
+Choose **MCP Skills**, select a project, and click **Read skill**. Copy the Markdown or open the corresponding `skills/<name>/SKILL.md` file from the package. Each guide describes how to find and connect to that project's own tools.

@@ -37,7 +37,9 @@ CyHub rassemble les applications, bibliothèques, SDK et extensions de l’écos
 
 Après la compilation décrite ci-dessous, ouvre `CyHub.exe` dans le dossier `dist/CyHub`. Les binaires Windows utilisent le runtime Microsoft Visual C++ x64.
 
-Pour activer l’installation gérée, ferme CyHub, ouvre PowerShell x64 en tant qu’administrateur et lance `Install-CyHub.ps1` depuis `dist/CyHub`. Ouvre ensuite `%ProgramFiles%\CyHub\CyHub.exe`. **Aide** et **F1** ouvrent le manuel local.
+CyHub démarre en anglais. Dans la barre latérale, choisis **Language → Français**. CyHub mémorise ton choix.
+
+Pour activer l’installation gérée, ferme CyHub, ouvre PowerShell x64 en tant qu’administrateur et lance `Install-CyHub.ps1` depuis `dist/CyHub`. Ouvre ensuite `%ProgramFiles%\CyHub\CyHub.exe`. **Aide** et **F1** ouvrent le manuel local dans la langue sélectionnée.
 
 ## Sources et compilation
 

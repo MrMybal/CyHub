@@ -5,14 +5,14 @@ description: Démarrer l’application Windows et activer le service de mise à 
 section: CyHub
 parent: overview
 order: 1
-sourceRevision: 1
+sourceRevision: 2
 ---
 
 ## Ouvrir CyHub {#launch}
 
 1. Extrais le paquet Windows x64 complet dans un dossier.
 2. Ouvre `CyHub.exe`. Garde le catalogue, les icônes, les skills et le dossier `Documentation` à côté de l’exécutable.
-3. Sélectionne un projet, puis clique sur **Vérifier sur GitHub** pour voir sa dernière publication.
+3. Choisis **Language → Français** si tu souhaites passer l’interface en français. Sélectionne un projet, puis clique sur **Vérifier sur GitHub** pour voir sa dernière publication.
 
 L’application utilise le runtime Microsoft Visual C++ x64. Le catalogue portable, les skills et le manuel sont disponibles dans le dossier extrait.
 

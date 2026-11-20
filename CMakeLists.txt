@@ -33,7 +33,7 @@ FetchContent_Declare(sdl3 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
   GIT_TAG a962f40bbba175e9716557a25d5d7965f134a3d3)
 FetchContent_MakeAvailable(cyui cymcpsdk sdl3)
 
-add_library(cyhub_core STATIC src/catalog.cpp src/releases.cpp src/platform.cpp)
+add_library(cyhub_core STATIC src/catalog.cpp src/preferences.cpp src/releases.cpp src/platform.cpp)
 target_include_directories(cyhub_core PUBLIC src)
 target_link_libraries(cyhub_core PUBLIC CyMCP::Http)
 if(WIN32)
@@ -41,7 +41,7 @@ if(WIN32)
   target_link_libraries(cyhub_core PUBLIC shell32 ole32 advapi32)
 endif()
 
-add_executable(CyHub src/main.cpp src/dashboard.cpp
+add_executable(CyHub src/main.cpp src/dashboard.cpp src/localization.cpp
   ${cyui_SOURCE_DIR}/third_party/imgui-sdl3/imgui_impl_sdl3.cpp
   ${cyui_SOURCE_DIR}/third_party/imgui-sdl3/imgui_impl_sdlrenderer3.cpp)
 target_include_directories(CyHub PRIVATE ${cyui_SOURCE_DIR}/third_party/imgui-sdl3)

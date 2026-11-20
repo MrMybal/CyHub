@@ -1,4 +1,5 @@
 #include "dashboard.hpp"
+#include "localization.hpp"
 
 #include <SDL3/SDL.h>
 #include <cyui/Core.h>
@@ -40,7 +41,7 @@ const char* fallback_icon(const Project& project) {
 
 void open_url(const std::string& url) {
     if (!SDL_OpenURL(url.c_str()))
-        cyui::notify("Impossible d’ouvrir le lien.", cyui::Tone::error);
+        cyui::notify(cyui::tr("Could not open the link.").c_str(), cyui::Tone::error);
 }
 
 void subdued_wrapped(const std::string& text) {
@@ -49,8 +50,9 @@ void subdued_wrapped(const std::string& text) {
 }
 }
 
-Dashboard::Dashboard(SDL_Renderer* renderer)
-    : catalog_(load_catalog(executable_directory() / "catalog.json")), root_(managed_root()) {
+Dashboard::Dashboard(SDL_Renderer* renderer, fs::path preferences)
+    : catalog_(load_catalog(executable_directory() / "catalog.json")), root_(managed_root()),
+      preferences_(std::move(preferences)) {
     const auto icons = executable_directory() / "assets" / "icons";
     for (const auto& project : catalog_) {
         status_.try_emplace(project.id);
@@ -130,7 +132,7 @@ void Dashboard::collect_checks() {
             status.checked = true;
         } else if (state_error_ != result.error) {
             state_error_ = result.error;
-            cyui::notify(state_error_.c_str(), cyui::Tone::error);
+            cyui::notify(localized_diagnostic(state_error_).c_str(), cyui::Tone::error);
         }
         status.error = std::move(result.error);
     }
@@ -162,9 +164,9 @@ void Dashboard::sidebar() {
         cyui::heading("CyHub", 1);
 
         ImGui::Dummy(dp(0, 24));
-        cyui::sidebarGroup("Catalogue");
+        cyui::sidebarGroup(cyui::tr("Catalog").c_str());
         const auto count = std::to_string(catalog_.size());
-        if (cyui::sidebarItem(cyui::icon::grid, "Tous les projets",
+        if (cyui::sidebarItem(cyui::icon::grid, cyui::trLabel("All projects").c_str(),
                 category_.empty() && !updates_only_ && !skills_only_, count.c_str())) {
             category_.clear();
             updates_only_ = false;
@@ -172,7 +174,7 @@ void Dashboard::sidebar() {
         }
         const auto updates = std::ranges::count_if(status_, [this](const auto& pair) { return ready(pair.second); });
         const auto available = std::to_string(updates);
-        if (cyui::sidebarItem(cyui::icon::download, "Mises à jour", updates_only_, available.c_str())) {
+        if (cyui::sidebarItem(cyui::icon::download, cyui::trLabel("Updates").c_str(), updates_only_, available.c_str())) {
             category_.clear();
             updates_only_ = true;
             skills_only_ = false;
@@ -180,36 +182,61 @@ void Dashboard::sidebar() {
         const auto skills = std::to_string(std::ranges::count_if(catalog_, [](const auto& project) {
             return !project.skill.empty();
         }));
-        if (cyui::sidebarItem(cyui::icon::code, "Skills MCP", skills_only_, skills.c_str())) {
+        if (cyui::sidebarItem(cyui::icon::code, cyui::trLabel("MCP Skills").c_str(), skills_only_, skills.c_str())) {
             category_.clear();
             updates_only_ = false;
             skills_only_ = true;
         }
         ImGui::Dummy(dp(0, 15));
-        cyui::sidebarGroup("Par type");
+        cyui::sidebarGroup(cyui::tr("By category").c_str());
         for (const auto& category : categories_) {
-            if (cyui::sidebarItem(category_icon(category), category.c_str(), category_ == category)) {
+            const auto label = std::string(category_for(category, cyui::locale())) + "###" + category;
+            if (cyui::sidebarItem(category_icon(category), label.c_str(), category_ == category)) {
                 category_ = category;
                 updates_only_ = false;
                 skills_only_ = false;
             }
         }
 
-        const auto lower = ImGui::GetWindowHeight() - cyui::dp(129);
+        const auto lower = ImGui::GetWindowHeight() - cyui::dp(184);
         if (ImGui::GetCursorPosY() < lower)
             ImGui::SetCursorPosY(lower);
         ImGui::Separator();
-        if (cyui::sidebarItem(cyui::icon::help, "Aide", false, "F1"))
+        language_picker();
+        if (cyui::sidebarItem(cyui::icon::help, cyui::trLabel("Help").c_str(), false, "F1"))
             open_manual();
         ImGui::Dummy(dp(0, 5));
         cyui::textColoured(service_running_ ? palette.success : palette.textDim, "%s",
-            service_running_ ? "●  Service actif" : "○  Service inactif");
-        cyui::textFaint("%s", supports_packages() ? "Windows x64 · GitHub" : "Catalogue · GitHub");
+            cyui::tr(service_running_ ? "●  Service running" : "○  Service inactive").c_str());
+        cyui::textFaint("%s", supports_packages() ? "Windows x64 · GitHub" : cyui::tr("Catalog · GitHub").c_str());
         if (!service_running_)
-            cyui::tooltip(supports_packages() ? "Le catalogue reste accessible en mode portable."
-                                             : "L’installation gérée est disponible sous Windows x64.");
+            cyui::tooltip(cyui::tr(supports_packages() ? "The catalog is available in portable mode."
+                                                     : "Managed installation is available on Windows x64.").c_str());
     }
     ImGui::EndChild();
+}
+
+void Dashboard::language_picker() {
+    const auto current = std::ranges::find(languages, std::string_view(cyui::locale()),
+        [](const Language& language) { return std::string_view(language.code); });
+    cyui::sectionTitle(cyui::tr("Language").c_str());
+    ImGui::SetNextItemWidth(-1);
+    if (!ImGui::BeginCombo("##language", (current == std::end(languages) ? languages[0] : *current).name))
+        return;
+    for (const auto& language : languages) {
+        const bool selected = cyui::locale() == language.code;
+        if (ImGui::Selectable(language.name, selected) && !selected) {
+            cyui::setLocale(language.code);
+            try {
+                save_language(preferences_, language.code);
+            } catch (const std::exception&) {
+                cyui::notify(cyui::tr("Could not save your language preference.").c_str(), cyui::Tone::warning);
+            }
+        }
+        if (selected)
+            ImGui::SetItemDefaultFocus();
+    }
+    ImGui::EndCombo();
 }
 
 void Dashboard::hero() {
@@ -232,16 +259,16 @@ void Dashboard::hero() {
     ImGui::SetCursorPos({start.x + cyui::dp(22), start.y + cyui::dp(20)});
     {
         cyui::ScopedFont big(cyui::boldFont(), 1.95f);
-        ImGui::TextUnformatted(skills_only_ ? "Skills MCP" : "Ta collection");
+        ImGui::TextUnformatted(cyui::tr(skills_only_ ? "MCP Skills" : "Your collection").c_str());
     }
     ImGui::SetCursorPosX(start.x + cyui::dp(22));
-    cyui::textDim("%s", skills_only_ ? "Guides de connexion pour les agents IA."
-                                    : "Applications, bibliothèques et extensions.");
+    cyui::textDim("%s", cyui::tr(skills_only_ ? "Connection guides for AI agents."
+                                            : "Applications, libraries and extensions.").c_str());
     const bool checking = checking_.load();
     ImGui::SetCursorPos({start.x + size.x - cyui::dp(167), start.y + cyui::dp(22)});
     {
         cyui::ScopedDisabled disabled(checking);
-        if (cyui::primaryButton(checking ? "Vérification…" : "Tout vérifier", dp(145, 35))) {
+        if (cyui::primaryButton(cyui::trLabel(checking ? "Checking…" : "Check all").c_str(), dp(145, 35))) {
             state_error_.clear();
             check_projects(catalog_);
         }
@@ -261,7 +288,7 @@ void Dashboard::project_list() {
             if (any)
                 ImGui::Dummy(dp(0, 8));
             section = project.category;
-            cyui::sectionTitle(project.category.c_str());
+            cyui::sectionTitle(std::string(category_for(project.category, cyui::locale())).c_str());
         }
         any = true;
         cyui::ScopedID id(project.id.c_str());
@@ -309,101 +336,101 @@ void Dashboard::project_list() {
         {
             cyui::ScopedFont small(cyui::uiFont(), 0.86f);
             cyui::clippedText(draw, {x, origin.y + cyui::dp(30)}, available - cyui::dp(69),
-                               palette.textDim, project.description.c_str());
+                               palette.textDim, project.description_for(cyui::locale()).c_str());
         }
     }
     if (!any)
-        cyui::textDim("%s", updates_only_ ? "Aucune mise à jour détectée." : "Aucun projet ne correspond à la recherche.");
+        cyui::textDim("%s", cyui::tr(updates_only_ ? "No updates found." : "No projects match your search.").c_str());
 }
 
 void Dashboard::detail() {
     const auto* project = find_project(catalog_, selected_);
     if (!project || !visible(*project)) {
-        cyui::textDim("%s", "Sélectionne un projet pour afficher ses versions.");
+        cyui::textDim("%s", cyui::tr("Select a project to see its versions.").c_str());
         return;
     }
     auto& status = status_.at(project->id);
-    cyui::overline("PROJET");
+    cyui::overline(cyui::tr("PROJECT").c_str());
     if (const auto icon = icons_.find(project->id); icon != icons_.end()) {
         ImGui::Image(reinterpret_cast<ImTextureID>(icon->second.get()), dp(30, 30));
         ImGui::SameLine(0, cyui::dp(8));
     }
     cyui::heading(project->name.c_str(), 1);
-    subdued_wrapped(project->description);
+    subdued_wrapped(project->description_for(cyui::locale()));
     ImGui::Dummy(dp(0, 7));
 
     const auto is_update = ready(status);
     if (is_update)
-        cyui::badge("Mise à jour disponible", cyui::Tone::success);
+        cyui::badge(cyui::tr("Update available").c_str(), cyui::Tone::success);
     else if (status.installed)
-        cyui::badge("Installé dans CyHub", cyui::Tone::info);
+        cyui::badge(cyui::tr("Installed by CyHub").c_str(), cyui::Tone::info);
     else if (status.release && status.release->asset)
-        cyui::badge("Paquet disponible", cyui::Tone::info);
+        cyui::badge(cyui::tr("Package available").c_str(), cyui::Tone::info);
     ImGui::Dummy(dp(0, 12));
     ImGui::Separator();
-    cyui::sectionTitle("Versions");
-    cyui::textDim("Installée  %s", status.installed ? status.installed->version.c_str() : "—");
-    const auto* latest = status.release ? status.release->tag.c_str() :
-        status.checked ? "Aucune publication stable" : "À vérifier";
-    cyui::textDim("GitHub     %s", latest);
+    cyui::sectionTitle(cyui::tr("Versions").c_str());
+    cyui::textDim("%s  %s", cyui::tr("Installed").c_str(), status.installed ? status.installed->version.c_str() : "—");
+    const auto latest = status.release ? status.release->tag :
+        cyui::tr(status.checked ? "No stable release" : "Not checked");
+    cyui::textDim("GitHub     %s", latest.c_str());
     if (!status.error.empty())
-        subdued_wrapped(status.error);
+        subdued_wrapped(localized_diagnostic(status.error));
 
     ImGui::Dummy(dp(0, 9));
     const auto can_install = status.release && status.release->asset && (!status.installed || is_update);
     const auto installing = service_running_ && active_job(status.job);
     if (installing)
         cyui::textColoured(cyui::palette().accent, "%s",
-            status.job.phase == "downloading" ? "Téléchargement en cours…" :
-            status.job.phase == "verifying" ? "Vérification et installation…" : "Demande prise en charge…");
+            cyui::tr(status.job.phase == "downloading" ? "Downloading…" :
+            status.job.phase == "verifying" ? "Verifying and installing…" : "Request accepted…").c_str());
     if (status.job.phase == "error")
-        subdued_wrapped(status.job.detail);
+        subdued_wrapped(localized_diagnostic(status.job.detail));
 
     if (can_install) {
         cyui::ScopedDisabled disabled(!service_running_ || installing || queued_.valid());
-        if (cyui::primaryButton(is_update ? "Mettre à jour" : "Installer", {-1, cyui::dp(35)})) {
+        if (cyui::primaryButton(cyui::trLabel(is_update ? "Update" : "Install").c_str(), {-1, cyui::dp(35)})) {
             const auto tag = status.release->tag;
             queued_ = std::async(std::launch::async, [project = *project, tag] { request_update(project, tag); });
         }
         if (!service_running_)
-            cyui::tooltip("Démarre le service Windows CyHub Updater pour installer ce paquet.");
+            cyui::tooltip(cyui::tr("Start the CyHub Updater Windows service to install this package.").c_str());
     } else if (status.release && !status.release->asset) {
-        subdued_wrapped("Publication à consulter sur GitHub.");
+        subdued_wrapped(cyui::tr("See the release on GitHub."));
     }
 
     if (status.installed) {
         const auto wheel = project->windows_x64->asset.ends_with(".whl");
-        if (cyui::ghostButton(wheel ? "Ouvrir le dossier" : "Ouvrir l’application", {-1, 0})) {
+        if (cyui::ghostButton(cyui::trLabel(wheel ? "Open folder" : "Open application").c_str(), {-1, 0})) {
             try {
                 open_installed(installed_entry(root_, *project, *status.installed), !wheel);
             } catch (const std::exception& error) {
-                cyui::notify(error.what(), cyui::Tone::error);
+                cyui::notify(localized_diagnostic(error.what()).c_str(), cyui::Tone::error);
             }
         }
     }
     if (!project->repo.empty()) {
         {
             cyui::ScopedDisabled disabled(checking_.load());
-            if (cyui::ghostButton("Vérifier sur GitHub", {-1, 0})) {
+            if (cyui::ghostButton(cyui::trLabel("Check on GitHub").c_str(), {-1, 0})) {
                 state_error_.clear();
                 check_projects({*project});
             }
         }
-        if (cyui::ghostButton(status.release ? "Voir la publication" : "Ouvrir le dépôt", {-1, 0}))
+        if (cyui::ghostButton(cyui::trLabel(status.release ? "View release" : "Open repository").c_str(), {-1, 0}))
             open_url(status.release ? status.release->url : project->url());
     } else {
-        cyui::textFaint("%s", "Projet local");
+        cyui::textFaint("%s", cyui::tr("Local project").c_str());
     }
     if (!project->skill.empty()) {
         ImGui::Dummy(dp(0, 8));
         ImGui::Separator();
-        cyui::sectionTitle("Skill MCP");
-        if (cyui::ghostButton("Lire le skill", {-1, 0})) {
+        cyui::sectionTitle(cyui::tr("MCP Skill").c_str());
+        if (cyui::ghostButton(cyui::trLabel("Read skill").c_str(), {-1, 0})) {
             try {
                 skill_text_ = read_skill(executable_directory(), *project);
-                ImGui::OpenPopup("Skill MCP");
+                ImGui::OpenPopup(cyui::trLabel("MCP Skill").c_str());
             } catch (const std::exception& error) {
-                cyui::notify(error.what(), cyui::Tone::error);
+                cyui::notify(localized_diagnostic(error.what()).c_str(), cyui::Tone::error);
             }
         }
         skill_popup(*project);
@@ -414,21 +441,21 @@ void Dashboard::skill_popup(const Project& project) {
     const auto viewport = ImGui::GetIO().DisplaySize;
     ImGui::SetNextWindowSize({std::min(cyui::dp(685), viewport.x * 0.92f),
                              std::min(cyui::dp(525), viewport.y * 0.9f)}, ImGuiCond_Appearing);
-    if (!ImGui::BeginPopupModal("Skill MCP", nullptr, ImGuiWindowFlags_NoSavedSettings))
+    if (!ImGui::BeginPopupModal(cyui::trLabel("MCP Skill").c_str(), nullptr, ImGuiWindowFlags_NoSavedSettings))
         return;
     cyui::heading(project.name.c_str(), 1);
     cyui::textDim("%s", ("skills/" + project.skill + "/SKILL.md").c_str());
-    if (ImGui::BeginChild("Texte du skill", {0, -cyui::dp(40)}, ImGuiChildFlags_Borders))
+    if (ImGui::BeginChild("SkillText", {0, -cyui::dp(40)}, ImGuiChildFlags_Borders))
         ImGui::TextWrapped("%s", skill_text_.c_str());
     ImGui::EndChild();
-    if (cyui::primaryButton("Copier le Markdown", dp(180, 28))) {
+    if (cyui::primaryButton(cyui::trLabel("Copy Markdown").c_str(), dp(180, 28))) {
         if (SDL_SetClipboardText(skill_text_.c_str()))
-            cyui::notify("Skill copié.", cyui::Tone::success);
+            cyui::notify(cyui::tr("Skill copied.").c_str(), cyui::Tone::success);
         else
-            cyui::notify("Presse-papiers indisponible.", cyui::Tone::error);
+            cyui::notify(cyui::tr("Clipboard unavailable.").c_str(), cyui::Tone::error);
     }
     ImGui::SameLine(0, cyui::dp(10));
-    if (cyui::ghostButton("Fermer", dp(85, 28)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
+    if (cyui::ghostButton(cyui::trLabel("Close").c_str(), dp(85, 28)) || ImGui::IsKeyPressed(ImGuiKey_Escape))
         ImGui::CloseCurrentPopup();
     ImGui::EndPopup();
 }
@@ -437,12 +464,12 @@ void Dashboard::open_manual() {
     try {
         const auto manual = executable_directory() / "Documentation" / "Documentation.html";
         if (!fs::is_regular_file(manual)) {
-            cyui::notify("Manuel absent du dossier CyHub.", cyui::Tone::error);
+            cyui::notify(cyui::tr("The manual is missing from the CyHub folder.").c_str(), cyui::Tone::error);
             return;
         }
-        open_url(file_url(manual) + "#/fr/overview");
+        open_url(file_url(manual) + "#/" + cyui::locale() + "/overview");
     } catch (const std::exception& error) {
-        cyui::notify(error.what(), cyui::Tone::error);
+        cyui::notify(localized_diagnostic(error.what()).c_str(), cyui::Tone::error);
     }
 }
 
@@ -454,9 +481,9 @@ void Dashboard::render() {
         try {
             queued_.get();
             refresh_state();
-            cyui::notify("Demande envoyée au service.", cyui::Tone::success);
+            cyui::notify(cyui::tr("Request sent to the service.").c_str(), cyui::Tone::success);
         } catch (const std::exception& error) {
-            cyui::notify(error.what(), cyui::Tone::error);
+            cyui::notify(localized_diagnostic(error.what()).c_str(), cyui::Tone::error);
         }
     }
 
@@ -477,7 +504,7 @@ void Dashboard::render() {
             ImGui::SetNextItemWidth(-1);
             if ((ImGui::GetIO().KeyCtrl || ImGui::GetIO().KeySuper) && ImGui::IsKeyPressed(ImGuiKey_F))
                 ImGui::SetKeyboardFocusHere();
-            ImGui::InputTextWithHint("##recherche", "Rechercher un projet…", search_.data(), search_.size());
+            ImGui::InputTextWithHint("##search", cyui::tr("Search for a project…").c_str(), search_.data(), search_.size());
             ImGui::Dummy(dp(0, 5));
 
             const auto* current = find_project(catalog_, selected_);

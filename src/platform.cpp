@@ -15,7 +15,7 @@ fs::path executable_directory() {
     std::wstring path(32768, L'\0');
     const auto length = GetModuleFileNameW(nullptr, path.data(), static_cast<DWORD>(path.size()));
     if (!length || length >= path.size())
-        throw std::runtime_error("Chemin de CyHub introuvable.");
+        throw std::runtime_error("Could not locate CyHub.");
     path.resize(length);
     return fs::path(path).parent_path();
 #elif defined(__APPLE__)
@@ -23,7 +23,7 @@ fs::path executable_directory() {
     _NSGetExecutablePath(nullptr, &size);
     std::string path(size, '\0');
     if (_NSGetExecutablePath(path.data(), &size) != 0)
-        throw std::runtime_error("Chemin de CyHub introuvable.");
+        throw std::runtime_error("Could not locate CyHub.");
     return fs::canonical(path.c_str()).parent_path();
 #else
     return fs::read_symlink("/proc/self/exe").parent_path();
@@ -54,7 +54,7 @@ fs::path managed_root() {
     PWSTR path = nullptr;
     const auto result = SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, nullptr, &path);
     if (FAILED(result))
-        throw std::runtime_error("Le dossier Program Files est introuvable.");
+        throw std::runtime_error("Could not locate Program Files.");
     const std::unique_ptr<wchar_t, decltype(&CoTaskMemFree)> folder(path, CoTaskMemFree);
     return fs::path(folder.get()) / "CyHub" / "Managed";
 #else
@@ -94,10 +94,10 @@ Job update_job(const fs::path& root, const Project& project) {
 
 fs::path installed_entry(const fs::path& root, const Project& project, const Installed& installed) {
     if (!project.windows_x64 || !valid_digest(installed.digest))
-        throw std::runtime_error("Installation inconnue.");
+        throw std::runtime_error("Unknown installation.");
     const auto name = package_entry(*project.windows_x64, installed.version);
     if (!portable_path(name))
-        throw std::runtime_error("Point d’entrée invalide.");
+        throw std::runtime_error("Invalid entry point.");
     return root / project.id / "versions" / installed.digest / fs::u8path(name);
 }
 
@@ -111,7 +111,7 @@ void open_installed(const fs::path& path, bool execute) {
         auto command = L"\"" + path.native() + L"\"";
         if (!CreateProcessW(path.c_str(), command.data(), nullptr, nullptr, FALSE, 0,
                             nullptr, directory.c_str(), &startup, &process))
-            throw std::system_error(GetLastError(), std::system_category(), "Démarrage impossible");
+            throw std::system_error(GetLastError(), std::system_category(), "Could not launch the application");
         CloseHandle(process.hProcess);
         CloseHandle(process.hThread);
         return;
@@ -119,11 +119,11 @@ void open_installed(const fs::path& path, bool execute) {
     const auto directory = path.parent_path();
     const auto result = ShellExecuteW(nullptr, L"open", directory.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     if (reinterpret_cast<INT_PTR>(result) <= 32)
-        throw std::runtime_error("Impossible d’ouvrir le dossier.");
+        throw std::runtime_error("Could not open the folder.");
 #else
     (void)path;
     (void)execute;
-    throw std::runtime_error("L’installation gérée est prévue pour Windows x64.");
+    throw std::runtime_error("Managed installation is available on Windows x64.");
 #endif
 }
 
@@ -131,7 +131,7 @@ void open_installed(const fs::path& path, bool execute) {
 bool updater_running() { return false; }
 
 void request_update(const Project&, std::string_view) {
-    throw std::runtime_error("Le service de mise à jour est disponible sous Windows x64.");
+    throw std::runtime_error("The update service is available on Windows x64.");
 }
 #endif
 }

@@ -5,7 +5,7 @@ description: Connecter un client IA à CyHub et lire les guides des projets.
 section: CyHub
 parent: overview
 order: 4
-sourceRevision: 1
+sourceRevision: 2
 ---
 
 ## Connecter un client MCP {#connect}

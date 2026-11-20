@@ -68,6 +68,16 @@ int main(int argc, char** argv) {
         const auto catalog = load_catalog(fs::u8path(argv[1]));
         const auto* ui = find_project(catalog, "cyui");
         check(ui && matches(*ui, "bibliotheques widgets"), "accent-insensitive catalog search");
+        check(matches(*ui, "libraries native widgets"), "English catalog search");
+        check(ui->description_for("en") == "Native Dear ImGui components, themes and widgets." &&
+              ui->description_for("fr") == ui->description, "project description follows the UI language");
+        check(category_for(ui->category, "en") == "Libraries and SDKs" &&
+              category_for(ui->category, "fr") == ui->category, "localized category labels");
+        for (const auto& project : catalog)
+            check(!project.description_en.empty(), "bundled projects have English descriptions");
+        auto custom = *ui;
+        custom.description_en.clear();
+        check(custom.description_for("en") == custom.description, "legacy catalog description fallback");
         check(!matches(*ui, "workflow"), "query excludes unrelated projects");
         check(file_url(fs::u8path("CyHub é #.html")).ends_with("CyHub%20%C3%A9%20%23.html"),
               "offline documentation URL encodes spaces, Unicode and fragments");
@@ -105,11 +115,17 @@ int main(int argc, char** argv) {
         preview.include_prerelease = true;
         check(parse_release(preview, metadata).has_value(), "explicit prerelease channel");
 
-#ifdef _WIN32
         const auto scratch = fs::temp_directory_path() /
             ("cyhub-test-" + std::to_string(cymcp::Clock::now().time_since_epoch().count()));
         fs::create_directory(scratch);
         try {
+            const auto preferences = scratch / "settings.json";
+            check(load_language(preferences) == "en", "default language is English");
+            save_language(preferences, "fr");
+            check(load_language(preferences) == "fr", "French selection persists");
+            save_language(preferences, "en");
+            check(load_language(preferences) == "en", "language preference is replaced");
+#ifdef _WIN32
             packages(*ui, scratch);
             if (argc == 3 && std::string_view(argv[2]) == "--live") {
                 const auto live = latest_release(*ui);
@@ -141,12 +157,12 @@ int main(int argc, char** argv) {
                 check(installed && installed->version == official->tag, "official ZIP activated");
                 std::cout << "Official CyUI ZIP verified and activated.\n";
             }
+#endif
         } catch (...) {
             fs::remove_all(scratch);
             throw;
         }
         fs::remove_all(scratch);
-#endif
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

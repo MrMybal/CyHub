@@ -20,11 +20,11 @@ bool token(std::string_view value, std::string_view extra) {
 std::string read_text(const fs::path& file, std::size_t limit) {
     std::ifstream stream(file, std::ios::binary);
     if (!stream)
-        throw std::runtime_error("Fichier illisible : " + cymcp::path_utf8(file));
+        throw std::runtime_error("Unable to read file: " + cymcp::path_utf8(file));
     std::string data(limit + 1, '\0');
     stream.read(data.data(), static_cast<std::streamsize>(data.size()));
     if (stream.bad() || static_cast<std::size_t>(stream.gcount()) > limit)
-        throw std::runtime_error("Fichier trop volumineux ou illisible.");
+        throw std::runtime_error("The file is too large or unreadable.");
     data.resize(static_cast<std::size_t>(stream.gcount()));
     return data;
 }
@@ -36,7 +36,7 @@ Json read_json(const fs::path& file, std::size_t limit) {
 
 std::string read_skill(const fs::path& directory, const Project& project) {
     if (!valid_id(project.skill) || !portable_path(project.skill))
-        throw std::runtime_error("Ce projet n’a aucun skill dans CyHub.");
+        throw std::runtime_error("CyHub has no skill for this project.");
     return read_text(directory / "skills" / project.skill / "SKILL.md", 16 * 1024);
 }
 
@@ -98,29 +98,30 @@ Catalog load_catalog(const fs::path& file) {
     const auto data = read_json(file, 512 * 1024);
     const auto& entries = data.at("projects");
     if (!entries.is_array() || entries.empty() || entries.size() > 300)
-        throw std::runtime_error("Le catalogue doit contenir entre 1 et 300 projets.");
+        throw std::runtime_error("The catalog must contain between 1 and 300 projects.");
 
     Catalog result;
     std::set<std::string> ids;
     for (const auto& entry : entries) {
         Project project{entry.at("id"), entry.at("name"), entry.at("category"),
-                        entry.at("description"), entry.value("repo", ""), {},
+                        entry.at("description"), entry.value("descriptionEn", ""), entry.value("repo", ""), {},
                         entry.value("skill", ""), entry.value("includePrerelease", false)};
         if (!valid_id(project.id) || !portable_path(project.id) || project.id != fold(project.id) ||
             !ids.insert(project.id).second || project.name.empty() || project.name.size() > 80 ||
-            project.category.empty() || project.category.size() > 60 || project.description.size() > 800)
-            throw std::runtime_error("Projet invalide ou identifiant en double : " + project.id);
+            project.category.empty() || project.category.size() > 60 || project.description.size() > 800 ||
+            project.description_en.size() > 800)
+            throw std::runtime_error("Invalid project or duplicate ID: " + project.id);
         if (!project.skill.empty() && (!valid_id(project.skill) || !portable_path(project.skill) ||
             project.skill != fold(project.skill) || project.skill.front() == '_' ||
             project.skill.find('_') != std::string::npos || project.skill.size() > 64))
-            throw std::runtime_error("Identifiant de skill invalide : " + project.skill);
+            throw std::runtime_error("Invalid skill ID: " + project.skill);
 
         if (!project.repo.empty()) {
             const auto slash = project.repo.find('/');
             if (slash == std::string::npos || !token(project.repo.substr(0, slash), "-") ||
                 !token(project.repo.substr(slash + 1), "-_.") ||
                 !portable_path(project.repo.substr(slash + 1)))
-                throw std::runtime_error("Dépôt GitHub invalide : " + project.repo);
+                throw std::runtime_error("Invalid GitHub repository: " + project.repo);
         }
         if (entry.contains("windowsX64")) {
             const auto& spec = entry.at("windowsX64");
@@ -133,7 +134,7 @@ Catalog load_catalog(const fs::path& file) {
                 ((zip || exe) && !fold(p.entry).ends_with(".exe")) ||
                 (wheel && (!p.entry.ends_with(".whl") || p.entry.find('/') != std::string::npos)) ||
                 (exe && p.entry.find('/') != std::string::npos))
-                throw std::runtime_error("Paquet Windows invalide : " + project.id);
+                throw std::runtime_error("Invalid Windows package: " + project.id);
             project.windows_x64 = std::move(p);
         }
         result.push_back(std::move(project));
@@ -150,8 +151,30 @@ std::string Project::url() const {
     return repo.empty() ? "" : "https://github.com/" + repo;
 }
 
+const std::string& Project::description_for(std::string_view language) const {
+    return (language == "fr" || description_en.empty()) ? description : description_en;
+}
+
+std::string_view category_for(std::string_view category, std::string_view language) {
+    if (language == "fr")
+        return category;
+    constexpr std::pair<std::string_view, std::string_view> categories[] = {
+        {"Applications", "Applications"},
+        {"Création et médias", "Creative and media"},
+        {"IA et automatisation", "AI and automation"},
+        {"Bibliothèques et SDK", "Libraries and SDKs"},
+        {"Unreal et VR", "Unreal and VR"},
+    };
+    for (const auto& [french, english] : categories) {
+        if (category == french)
+            return english;
+    }
+    return category;
+}
+
 bool matches(const Project& project, std::string_view query) {
-    const auto text = fold(project.name + " " + project.category + " " + project.description + " " + project.repo);
+    const auto text = fold(project.name + " " + project.category + " " + std::string(category_for(project.category, "en"))
+        + " " + project.description + " " + project.description_en + " " + project.repo);
     while (!query.empty()) {
         const auto space = query.find(' ');
         if (text.find(fold(query.substr(0, space))) == std::string::npos)
