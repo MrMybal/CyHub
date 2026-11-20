@@ -4,6 +4,8 @@
 
 **Statut** en développement.
 
+[Préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.1.0)
+
 ## Inclus
 
 - Catalogue CyUI avec recherche pour les applications, bibliothèques, SDK et extensions.

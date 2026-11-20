@@ -10,7 +10,7 @@
     <td width="300" align="right" valign="top">
       <p><a href="#licenses">Component licenses</a></p>
       <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.1.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
-      <p><sub>Windows x64 · build from source</sub></p>
+      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.1.0"><strong>Windows x64 preview</strong></a></p>
     </td>
   </tr>
 </table>
@@ -21,9 +21,9 @@ CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions int
 
 > **IN DEVELOPMENT · 0.1.0**
 >
-> The desktop app and update service target Windows x64. See the [version notes and limitations](VERSION.md).
+> The Windows x64 preview includes the desktop app, update service, MCP server and offline manual. See the [version notes and limitations](VERSION.md).
 
-[![English CyHub catalog with project icons, the language picker and project details](assets/screenshots/catalog.png)](assets/screenshots/catalog.png)
+[![English CyHub catalog with project icons, the language picker and project details](Documentation/DocData/assets/catalog.png)](Documentation/DocData/assets/catalog.png)
 
 ## The CyHub catalog
 
@@ -35,11 +35,13 @@ CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions int
 
 ## Installation
 
-After building the package below, open `CyHub.exe` in `dist/CyHub`. The Windows binaries use the Microsoft Visual C++ x64 runtime.
+Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.1.0) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
 
 CyHub starts in English. Use **Language** in the sidebar to switch to French. CyHub remembers your choice.
 
-To enable managed installs, close CyHub, open PowerShell x64 as administrator and run `Install-CyHub.ps1` from `dist/CyHub`. Then launch `%ProgramFiles%\CyHub\CyHub.exe`. Use **Help** or press **F1** to open the local manual in the selected language.
+To enable managed installs, close CyHub, open PowerShell x64 as administrator and run `Install-CyHub.ps1` from the extracted folder. Then launch `%ProgramFiles%\CyHub\CyHub.exe`. Use **Help** or press **F1** to open the local manual in the selected language.
+
+To update CyHub itself, extract the new package into a fresh folder. If you use the Windows service, close CyHub and rerun the installer from that folder. [Update instructions](Documentation/Documentation.html#/en/installation/upgrade)
 
 ## Source and build
 
@@ -50,6 +52,7 @@ cmake -S . -B build/windows -G "Visual Studio 17 2022" -A x64
 cmake --build build/windows --config Release --parallel
 ctest --test-dir build/windows -C Release --output-on-failure
 cmake --install build/windows --config Release --prefix dist/CyHub --component CyHub
+Compress-Archive -Path dist/CyHub -DestinationPath dist/CyHub-windows-x64.zip -Force
 ```
 
 You can also build with Ninja from **x64 Native Tools for VS 2022**. Configure with `-G Ninja -DCMAKE_BUILD_TYPE=Release`. CMake fetches pinned revisions of CyUI, CyMCPSDK, SDL3 and miniz. Use `FETCHCONTENT_SOURCE_DIR_CYUI`, `FETCHCONTENT_SOURCE_DIR_CYMCPSDK`, `FETCHCONTENT_SOURCE_DIR_SDL3` or `FETCHCONTENT_SOURCE_DIR_MINIZ` to use existing checkouts.

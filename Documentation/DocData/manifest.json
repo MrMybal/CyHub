@@ -54,10 +54,10 @@
       "section": "CyHub",
       "parent": "overview",
       "order": 1,
-      "revision": "2",
+      "revision": "3",
       "locale": "en",
-      "html": "<h2 id=\"launch\">Launch CyHub<a class=\"heading-anchor\" href=\"#/en/installation/launch\" aria-label=\"Link to Launch CyHub\">#</a></h2><ol>\n<li>Extract the complete Windows x64 package into a folder.</li>\n<li>Open <code>CyHub.exe</code>. Keep the catalog, icons, skills and <code>Documentation</code> beside the executable.</li>\n<li>Select a project and choose <strong>Check on GitHub</strong> to see its latest release.</li>\n</ol>\n<p>The app uses the Microsoft Visual C++ x64 runtime. The portable catalog, skills and manual are available from the extracted folder.</p>\n<h2 id=\"service\">Enable managed updates<a class=\"heading-anchor\" href=\"#/en/installation/service\" aria-label=\"Link to Enable managed updates\">#</a></h2><p>Close CyHub before installation. From a PowerShell x64 window running as administrator, run <code>Install-CyHub.ps1</code> from the extracted package. Then open <code>%ProgramFiles%\\CyHub\\CyHub.exe</code>.</p>\n<p>The sidebar shows <strong>Service running</strong> when CyHub Updater is running. The update service uses the Windows LocalService account. It continues a requested update after the app window closes.</p>\n<p>Run <code>Uninstall-CyHubService.ps1</code> as administrator to remove the service. The app, catalog and managed versions stay in Program Files.</p>\n",
-      "text": "Launch CyHub # Extract the complete Windows x64 package into a folder. Open CyHub.exe . Keep the catalog, icons, skills and Documentation beside the executable. Select a project and choose Check on GitHub to see its latest release. The app uses the Microsoft Visual C++ x64 runtime. The portable catalog, skills and manual are available from the extracted folder. Enable managed updates # Close CyHub before installation. From a PowerShell x64 window running as administrator, run Install-CyHub.ps1 from the extracted package. Then open %ProgramFiles%\\CyHub\\CyHub.exe . The sidebar shows Service running when CyHub Updater is running. The update service uses the Windows LocalService account. It continues a requested update after the app window closes. Run Uninstall-CyHubService.ps1 as administrator to remove the service. The app, catalog and managed versions stay in Program Files.",
+      "html": "<h2 id=\"launch\">Launch CyHub<a class=\"heading-anchor\" href=\"#/en/installation/launch\" aria-label=\"Link to Launch CyHub\">#</a></h2><ol>\n<li>Download <code>CyHub-windows-x64.zip</code> from the <a href=\"https://github.com/MrMybal/CyHub/releases/tag/v0.1.0\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub preview</a> and extract it into a folder.</li>\n<li>Open <code>CyHub.exe</code>. Keep the catalog, icons, skills and <code>Documentation</code> beside the executable.</li>\n<li>Select a project and choose <strong>Check on GitHub</strong> to see its latest release.</li>\n</ol>\n<p>The app uses the <a href=\"https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist\" target=\"_blank\" rel=\"noopener noreferrer\">Microsoft Visual C++ x64 runtime</a>. The portable catalog, skills and manual are available from the extracted folder.</p>\n<h2 id=\"service\">Enable managed updates<a class=\"heading-anchor\" href=\"#/en/installation/service\" aria-label=\"Link to Enable managed updates\">#</a></h2><p>Close CyHub before installation. From a PowerShell x64 window running as administrator, run <code>Install-CyHub.ps1</code> from the extracted package. Then open <code>%ProgramFiles%\\CyHub\\CyHub.exe</code>.</p>\n<p>The sidebar shows <strong>Service running</strong> when CyHub Updater is running. The update service uses the Windows LocalService account. It continues a requested update after the app window closes.</p>\n<p>Run <code>Uninstall-CyHubService.ps1</code> as administrator to remove the service. The app, catalog and managed versions stay in Program Files.</p>\n<h2 id=\"upgrade\">Update CyHub itself<a class=\"heading-anchor\" href=\"#/en/installation/upgrade\" aria-label=\"Link to Update CyHub itself\">#</a></h2><ol>\n<li>Close CyHub and extract the newer package into a fresh folder.</li>\n<li>For portable use, open <code>CyHub.exe</code> from the new folder. Copy any project entries and icons you added to the new catalog and assets.</li>\n<li>If you use CyHub Updater, run <code>Install-CyHub.ps1</code> as administrator from the new folder. Merge your custom catalog entries before running the script because it copies the catalog from the package.</li>\n</ol>\n<p>The installer replaces the application and service files. It preserves managed project versions in <code>%ProgramFiles%\\CyHub\\Managed</code> and the saved language in your Windows profile.</p>\n",
+      "text": "Launch CyHub # Download CyHub-windows-x64.zip from the GitHub preview and extract it into a folder. Open CyHub.exe . Keep the catalog, icons, skills and Documentation beside the executable. Select a project and choose Check on GitHub to see its latest release. The app uses the Microsoft Visual C++ x64 runtime . The portable catalog, skills and manual are available from the extracted folder. Enable managed updates # Close CyHub before installation. From a PowerShell x64 window running as administrator, run Install-CyHub.ps1 from the extracted package. Then open %ProgramFiles%\\CyHub\\CyHub.exe . The sidebar shows Service running when CyHub Updater is running. The update service uses the Windows LocalService account. It continues a requested update after the app window closes. Run Uninstall-CyHubService.ps1 as administrator to remove the service. The app, catalog and managed versions stay in Program Files. Update CyHub itself # Close CyHub and extract the newer package into a fresh folder. For portable use, open CyHub.exe from the new folder. Copy any project entries and icons you added to the new catalog and assets. If you use CyHub Updater, run Install-CyHub.ps1 as administrator from the new folder. Merge your custom catalog entries before running the script because it copies the catalog from the package. The installer replaces the application and service files. It preserves managed project versions in %ProgramFiles%\\CyHub\\Managed and the saved language in your Windows profile.",
       "headings": [
         {
           "id": "launch",
@@ -68,13 +68,21 @@
           "id": "service",
           "text": "Enable managed updates",
           "level": 2
+        },
+        {
+          "id": "upgrade",
+          "text": "Update CyHub itself",
+          "level": 2
         }
       ],
       "anchors": [],
       "languages": [],
       "code": "",
       "assets": [],
-      "links": [],
+      "links": [
+        "https://github.com/MrMybal/CyHub/releases/tag/v0.1.0",
+        "https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist"
+      ],
       "kind": "guide"
     },
     {
@@ -217,10 +225,10 @@
       "section": "CyHub",
       "parent": "overview",
       "order": 1,
-      "sourceRevision": "2",
+      "sourceRevision": "3",
       "locale": "fr",
-      "html": "<h2 id=\"launch\">Ouvrir CyHub<a class=\"heading-anchor\" href=\"#/fr/installation/launch\" aria-label=\"Lien vers Ouvrir CyHub\">#</a></h2><ol>\n<li>Extrais le paquet Windows x64 complet dans un dossier.</li>\n<li>Ouvre <code>CyHub.exe</code>. Garde le catalogue, les icônes, les skills et le dossier <code>Documentation</code> à côté de l’exécutable.</li>\n<li>Choisis <strong>Language → Français</strong> si tu souhaites passer l’interface en français. Sélectionne un projet, puis clique sur <strong>Vérifier sur GitHub</strong> pour voir sa dernière publication.</li>\n</ol>\n<p>L’application utilise le runtime Microsoft Visual C++ x64. Le catalogue portable, les skills et le manuel sont disponibles dans le dossier extrait.</p>\n<h2 id=\"service\">Activer les mises à jour gérées<a class=\"heading-anchor\" href=\"#/fr/installation/service\" aria-label=\"Lien vers Activer les mises à jour gérées\">#</a></h2><p>Ferme CyHub avant l’installation. Ouvre PowerShell x64 en tant qu’administrateur et lance <code>Install-CyHub.ps1</code> depuis le paquet extrait. Ouvre ensuite <code>%ProgramFiles%\\CyHub\\CyHub.exe</code>.</p>\n<p>La barre latérale affiche <strong>Service actif</strong> quand CyHub Updater tourne. Le service utilise le compte Windows LocalService et poursuit une mise à jour demandée après la fermeture de la fenêtre.</p>\n<p>Lance <code>Uninstall-CyHubService.ps1</code> en administrateur pour retirer le service. L’application, le catalogue et les versions gérées restent dans Program Files.</p>\n",
-      "text": "Ouvrir CyHub # Extrais le paquet Windows x64 complet dans un dossier. Ouvre CyHub.exe . Garde le catalogue, les icônes, les skills et le dossier Documentation à côté de l’exécutable. Choisis Language → Français si tu souhaites passer l’interface en français. Sélectionne un projet, puis clique sur Vérifier sur GitHub pour voir sa dernière publication. L’application utilise le runtime Microsoft Visual C++ x64. Le catalogue portable, les skills et le manuel sont disponibles dans le dossier extrait. Activer les mises à jour gérées # Ferme CyHub avant l’installation. Ouvre PowerShell x64 en tant qu’administrateur et lance Install-CyHub.ps1 depuis le paquet extrait. Ouvre ensuite %ProgramFiles%\\CyHub\\CyHub.exe . La barre latérale affiche Service actif quand CyHub Updater tourne. Le service utilise le compte Windows LocalService et poursuit une mise à jour demandée après la fermeture de la fenêtre. Lance Uninstall-CyHubService.ps1 en administrateur pour retirer le service. L’application, le catalogue et les versions gérées restent dans Program Files.",
+      "html": "<h2 id=\"launch\">Ouvrir CyHub<a class=\"heading-anchor\" href=\"#/fr/installation/launch\" aria-label=\"Lien vers Ouvrir CyHub\">#</a></h2><ol>\n<li>Télécharge <code>CyHub-windows-x64.zip</code> depuis la <a href=\"https://github.com/MrMybal/CyHub/releases/tag/v0.1.0\" target=\"_blank\" rel=\"noopener noreferrer\">préversion GitHub</a> et extrais-le dans un dossier.</li>\n<li>Ouvre <code>CyHub.exe</code>. Garde le catalogue, les icônes, les skills et le dossier <code>Documentation</code> à côté de l’exécutable.</li>\n<li>Choisis <strong>Language → Français</strong> si tu souhaites passer l’interface en français. Sélectionne un projet, puis clique sur <strong>Vérifier sur GitHub</strong> pour voir sa dernière publication.</li>\n</ol>\n<p>L’application utilise le <a href=\"https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist\" target=\"_blank\" rel=\"noopener noreferrer\">runtime Microsoft Visual C++ x64</a>. Le catalogue portable, les skills et le manuel sont disponibles dans le dossier extrait.</p>\n<h2 id=\"service\">Activer les mises à jour gérées<a class=\"heading-anchor\" href=\"#/fr/installation/service\" aria-label=\"Lien vers Activer les mises à jour gérées\">#</a></h2><p>Ferme CyHub avant l’installation. Ouvre PowerShell x64 en tant qu’administrateur et lance <code>Install-CyHub.ps1</code> depuis le paquet extrait. Ouvre ensuite <code>%ProgramFiles%\\CyHub\\CyHub.exe</code>.</p>\n<p>La barre latérale affiche <strong>Service actif</strong> quand CyHub Updater tourne. Le service utilise le compte Windows LocalService et poursuit une mise à jour demandée après la fermeture de la fenêtre.</p>\n<p>Lance <code>Uninstall-CyHubService.ps1</code> en administrateur pour retirer le service. L’application, le catalogue et les versions gérées restent dans Program Files.</p>\n<h2 id=\"upgrade\">Mettre à jour CyHub lui-même<a class=\"heading-anchor\" href=\"#/fr/installation/upgrade\" aria-label=\"Lien vers Mettre à jour CyHub lui-même\">#</a></h2><ol>\n<li>Ferme CyHub et extrais le nouveau paquet dans un dossier vide.</li>\n<li>En mode portable, ouvre <code>CyHub.exe</code> depuis le nouveau dossier. Reporte les projets et les icônes que tu avais ajoutés dans le nouveau catalogue et les ressources.</li>\n<li>Si tu utilises CyHub Updater, exécute <code>Install-CyHub.ps1</code> en administrateur depuis le nouveau dossier. Fusionne tes entrées personnalisées avant de lancer le script, qui récupère le catalogue du paquet.</li>\n</ol>\n<p>Le script remplace les fichiers de l’application et du service. Les versions gérées restent dans <code>%ProgramFiles%\\CyHub\\Managed</code> et la langue mémorisée reste dans ton profil Windows.</p>\n",
+      "text": "Ouvrir CyHub # Télécharge CyHub-windows-x64.zip depuis la préversion GitHub et extrais-le dans un dossier. Ouvre CyHub.exe . Garde le catalogue, les icônes, les skills et le dossier Documentation à côté de l’exécutable. Choisis Language → Français si tu souhaites passer l’interface en français. Sélectionne un projet, puis clique sur Vérifier sur GitHub pour voir sa dernière publication. L’application utilise le runtime Microsoft Visual C++ x64 . Le catalogue portable, les skills et le manuel sont disponibles dans le dossier extrait. Activer les mises à jour gérées # Ferme CyHub avant l’installation. Ouvre PowerShell x64 en tant qu’administrateur et lance Install-CyHub.ps1 depuis le paquet extrait. Ouvre ensuite %ProgramFiles%\\CyHub\\CyHub.exe . La barre latérale affiche Service actif quand CyHub Updater tourne. Le service utilise le compte Windows LocalService et poursuit une mise à jour demandée après la fermeture de la fenêtre. Lance Uninstall-CyHubService.ps1 en administrateur pour retirer le service. L’application, le catalogue et les versions gérées restent dans Program Files. Mettre à jour CyHub lui-même # Ferme CyHub et extrais le nouveau paquet dans un dossier vide. En mode portable, ouvre CyHub.exe depuis le nouveau dossier. Reporte les projets et les icônes que tu avais ajoutés dans le nouveau catalogue et les ressources. Si tu utilises CyHub Updater, exécute Install-CyHub.ps1 en administrateur depuis le nouveau dossier. Fusionne tes entrées personnalisées avant de lancer le script, qui récupère le catalogue du paquet. Le script remplace les fichiers de l’application et du service. Les versions gérées restent dans %ProgramFiles%\\CyHub\\Managed et la langue mémorisée reste dans ton profil Windows.",
       "headings": [
         {
           "id": "launch",
@@ -231,15 +239,23 @@
           "id": "service",
           "text": "Activer les mises à jour gérées",
           "level": 2
+        },
+        {
+          "id": "upgrade",
+          "text": "Mettre à jour CyHub lui-même",
+          "level": 2
         }
       ],
       "anchors": [],
       "languages": [],
       "code": "",
       "assets": [],
-      "links": [],
+      "links": [
+        "https://github.com/MrMybal/CyHub/releases/tag/v0.1.0",
+        "https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist"
+      ],
       "kind": "guide",
-      "revision": "4a5192fb26c1"
+      "revision": "f7e843702db0"
     },
     {
       "id": "mcp",

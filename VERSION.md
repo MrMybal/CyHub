@@ -4,6 +4,8 @@
 
 **Status:** In development.
 
+[Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.1.0)
+
 ## Included
 
 - Searchable CyUI catalog for applications, libraries, SDKs and extensions.
