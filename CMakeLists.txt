@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(CyHub VERSION 0.3.0 LANGUAGES C CXX)
+project(CyHub VERSION 0.3.1 LANGUAGES C CXX)
 include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -48,6 +48,11 @@ add_executable(CyHub src/main.cpp src/dashboard.cpp src/localization.cpp
 target_include_directories(CyHub PRIVATE ${cyui_SOURCE_DIR}/third_party/imgui-sdl3)
 target_link_libraries(CyHub PRIVATE cyhub_core CyUI::Core SDL3::SDL3-static)
 if(WIN32)
+  enable_language(RC)
+  configure_file(src/cyhub.rc.in "${CMAKE_CURRENT_BINARY_DIR}/cyhub.rc" @ONLY)
+  set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/cyhub.rc" PROPERTIES
+    OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/branding/cyhub.ico")
+  target_sources(CyHub PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/cyhub.rc")
   set_target_properties(CyHub PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 

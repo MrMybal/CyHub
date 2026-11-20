@@ -121,6 +121,13 @@ int main(int argc, char** argv) {
     int result = 1;
     if (SDL_CreateWindowAndRenderer("CyHub", 1320, 850,
             SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &renderer)) {
+        if (const auto* base = SDL_GetBasePath()) {
+            const auto icon_path = std::string(base) + "assets/icons/cyhub.png";
+            if (auto* icon = SDL_LoadPNG(icon_path.c_str())) {
+                SDL_SetWindowIcon(window, icon);
+                SDL_DestroySurface(icon);
+            }
+        }
         SDL_SetWindowMinimumSize(window, 790, 560);
         const bool vsync = SDL_SetRenderVSync(renderer, 1);
         cyhub::fs::path preferences;

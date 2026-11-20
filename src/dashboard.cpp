@@ -311,8 +311,13 @@ void Dashboard::sidebar() {
     if (ImGui::BeginChild("Navigation", {cyui::dp(226), 0}, ImGuiChildFlags_AlwaysUseWindowPadding)) {
         const auto p = ImGui::GetCursorScreenPos();
         auto* draw = ImGui::GetWindowDrawList();
-        draw->AddRectFilled(p, {p.x + cyui::dp(37), p.y + cyui::dp(37)}, palette.accent, cyui::dp(9));
-        cyui::centredText(draw, p, {p.x + cyui::dp(37), p.y + cyui::dp(37)}, palette.accentText, "CY");
+        const ImVec2 end{p.x + cyui::dp(37), p.y + cyui::dp(37)};
+        if (const auto icon = icons_.find("cyhub"); icon != icons_.end()) {
+            draw->AddImage(reinterpret_cast<ImTextureID>(icon->second.get()), p, end);
+        } else {
+            draw->AddRectFilled(p, end, palette.accent, cyui::dp(9));
+            cyui::centredText(draw, p, end, palette.accentText, "CY");
+        }
         ImGui::Dummy(dp(37, 37));
         ImGui::SameLine(0, cyui::dp(10));
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + cyui::dp(5));

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">CyHub</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#244869"/>
+      <stop offset=".55" stop-color="#173759"/>
+      <stop offset="1" stop-color="#0A5558"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#9AEDE4"/>
+      <stop offset="1" stop-color="#37A9AE"/>
+    </linearGradient>
+    <linearGradient id="hub" x1="0" y1="1" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop stop-color="#48B9B8" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#83E1D7" stop-opacity=".62"/>
+    </linearGradient>
+  </defs>
+  <rect x="22" y="22" width="468" height="468" rx="105" fill="url(#tile)" stroke="url(#edge)" stroke-width="7"/>
+  <!-- The H sits behind the shared CY monogram. -->
+  <path fill="url(#hub)" d="M113 83h42a13 13 0 0 1 13 13v120h176V96a13 13 0 0 1 13-13h42a13 13 0 0 1 13 13v320a13 13 0 0 1-13 13h-42a13 13 0 0 1-13-13V282H168v134a13 13 0 0 1-13 13h-42a13 13 0 0 1-13-13V96a13 13 0 0 1 13-13Z"/>
+  <!-- Both paths use the proportions of the CyAICodex monogram reference. -->
+  <g fill="#FFFFFF" transform="translate(261 256) scale(.428) translate(-624 -634)">
+    <path d="M899 392a365 365 0 1 0 6 484l-62-61a277 277 0 1 1-7-361Z"/>
+    <path d="M451 482h84l92 142 94-142h83L664 693v151h-74V693Z"/>
+  </g>
+</svg>

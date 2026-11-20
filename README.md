@@ -6,11 +6,11 @@
       <sub>README</sub><br>
       <a href="README.md">English</a> · <a href="README.fr.md">Français</a>
     </td>
-    <td width="400" align="center" valign="middle"><strong>CyHub</strong></td>
+    <td width="400" align="center" valign="middle"><img src="assets/icons/cyhub.png" width="112" alt="CyHub"></td>
     <td width="300" align="right" valign="top">
       <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
-      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.3.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
-      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.3.0"><strong>Windows x64 preview</strong></a></p>
+      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.3.1</strong></a><br><strong>IN DEVELOPMENT</strong></p>
+      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.3.1"><strong>Windows x64 preview</strong></a></p>
     </td>
   </tr>
 </table>
@@ -19,7 +19,7 @@
 
 CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions into one desktop catalog. Find a project, check its latest GitHub release and open its MCP guide from the same project panel.
 
-> **IN DEVELOPMENT · 0.3.0**
+> **IN DEVELOPMENT · 0.3.1**
 >
 > The Windows x64 preview includes the desktop app, update service, MCP server and offline manual. See the [version notes and limitations](VERSION.md).
 
@@ -42,7 +42,7 @@ Open CyMCPHub from CyHub to load the **CyHub** MCP source. In CyMCPHub, select t
 
 ## Installation
 
-Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.3.0) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
+Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.3.1) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
 
 CyHub starts in English. Use **Language** in the sidebar to switch to French. CyHub remembers your choice.
 

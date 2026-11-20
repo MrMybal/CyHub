@@ -1,13 +1,14 @@
-# CyHub 0.3.0
+# CyHub 0.3.1
 
 [English](VERSION.md) · [README](README.fr.md)
 
 **Statut** en développement.
 
-[Préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.3.0)
+[Préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.3.1)
 
 ## Inclus
 
+- Logo CyHub dans la fenêtre, le catalogue et l’icône de l’exécutable Windows, ainsi que dans les deux README.
 - Détection automatique des installations Windows au démarrage, avec la vue Applications installées et la recherche de mises à jour GitHub pour les versions connues.
 - État, version et source des installations dans le catalogue MCP.
 - Carte CyMCPHub recommandée avec installation hors ligne de la version 0.3.0, mises à jour par compte et pont MCP pour les skills inclus.
