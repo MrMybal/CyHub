@@ -1,12 +1,14 @@
-# CyHub 0.1.0
+# CyHub 0.2.0
 
 [Français](VERSION.fr.md) · [README](README.md)
 
 **Status:** In development.
 
-[Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.1.0)
+[Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0)
 
 ## Included
+
+- Recommended CyMCPHub card with direct offline installation of version 0.3.0, per-user updates and an MCP bridge for the bundled skills.
 
 - Searchable CyUI catalog for applications, libraries, SDKs and extensions.
 - Project artwork where available.

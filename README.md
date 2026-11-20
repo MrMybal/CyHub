@@ -9,8 +9,8 @@
     <td width="400" align="center" valign="middle"><strong>CyHub</strong></td>
     <td width="300" align="right" valign="top">
       <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
-      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.1.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
-      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.1.0"><strong>Windows x64 preview</strong></a></p>
+      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.2.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
+      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.2.0"><strong>Windows x64 preview</strong></a></p>
     </td>
   </tr>
 </table>
@@ -19,7 +19,7 @@
 
 CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions into one desktop catalog. Find a project, check its latest GitHub release and open its MCP guide from the same project panel.
 
-> **IN DEVELOPMENT · 0.1.0**
+> **IN DEVELOPMENT · 0.2.0**
 >
 > The Windows x64 preview includes the desktop app, update service, MCP server and offline manual. See the [version notes and limitations](VERSION.md).
 
@@ -31,11 +31,17 @@ CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions int
 - **14 projects configured for managed installation** through the Windows service. The service verifies the published SHA-256 and continues working after the window closes.
 - **32 MCP skills** to read or copy in CyHub. The CyMCPSDK stdio server also exposes the catalog, release checks and guides through read-only tools.
 
+### Install the recommended companion
+
+[CyMCPHub](https://github.com/MrMybal/CyMCPHub) brings skills, MCP servers, CLI tools and SDKs into one workspace. Use **Install CyMCPHub** in the CyHub catalog or the MCP Skills view. The Windows preview includes CyMCPHub 0.3.0 and installs it for your account without administrator access.
+
+Open CyMCPHub from CyHub to load the **CyHub** MCP source. In CyMCPHub, select that connector and choose **Skills → Collect connector skills** to add the CyHub guides to its library. Use **Check on GitHub** in the companion card for future updates. For the private repository, run CyHub with an existing `GH_TOKEN` that can read its releases. [Companion guide](Documentation/Documentation.html#/en/mcp/companion)
+
 ---
 
 ## Installation
 
-Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.1.0) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
+Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
 
 CyHub starts in English. Use **Language** in the sidebar to switch to French. CyHub remembers your choice.
 
@@ -57,6 +63,8 @@ Compress-Archive -Path dist/CyHub -DestinationPath dist/CyHub-windows-x64.zip -F
 
 You can also build with Ninja from **x64 Native Tools for VS 2022**. Configure with `-G Ninja -DCMAKE_BUILD_TYPE=Release`. CMake fetches pinned revisions of CyUI, CyMCPSDK, SDL3 and miniz. Use `FETCHCONTENT_SOURCE_DIR_CYUI`, `FETCHCONTENT_SOURCE_DIR_CYMCPSDK`, `FETCHCONTENT_SOURCE_DIR_SDL3` or `FETCHCONTENT_SOURCE_DIR_MINIZ` to use existing checkouts.
 
+To include CyMCPHub for offline installation, pass `-DCYHUB_CYMCPHUB_PACKAGE=path/to/CyMCPHub-0.3.0-windows-x64.zip` when configuring CMake. Use the portable archive with `CyMCPHub.exe` and `CyMCPHubMcp.exe` at its root.
+
 ---
 
 ## Licenses
@@ -72,6 +80,7 @@ Bundled components retain their licenses. The package includes their notices in 
 | [CyMCPSDK](https://github.com/MrMybal/CyMCPSDK), [nlohmann/json](https://github.com/nlohmann/json) and [cpp-httplib](https://github.com/yhirose/cpp-httplib) | MIT | JSON catalog, HTTPS transport and MCP server. |
 | [miniz](https://github.com/richgel999/miniz) and [PicoSHA2](https://github.com/okdshin/PicoSHA2) | MIT | ZIP extraction and SHA-256 verification on Windows. |
 | [CyDoc](https://github.com/MrMybal/CyDoc) | MIT | Offline HTML manual and generation tools. |
+| [CyMCPHub](https://github.com/MrMybal/CyMCPHub) | GPL-3.0-only | Optional companion. Its source archive is available alongside the Windows preview. |
 
 ## References
 

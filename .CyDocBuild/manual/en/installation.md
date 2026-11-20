@@ -5,12 +5,12 @@ description: Start the Windows desktop app and enable the update service.
 section: CyHub
 parent: overview
 order: 1
-revision: 3
+revision: 4
 ---
 
 ## Launch CyHub {#launch}
 
-1. Download `CyHub-windows-x64.zip` from the [GitHub preview](https://github.com/MrMybal/CyHub/releases/tag/v0.1.0) and extract it into a folder.
+1. Download `CyHub-windows-x64.zip` from the [GitHub preview](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0) and extract it into a folder.
 2. Open `CyHub.exe`. Keep the catalog, icons, skills and `Documentation` beside the executable.
 3. Select a project and choose **Check on GitHub** to see its latest release.
 

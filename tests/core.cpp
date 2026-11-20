@@ -1,4 +1,5 @@
 #include "hub.hpp"
+#include "companion.hpp"
 
 #include <iostream>
 #ifdef _WIN32
@@ -67,6 +68,12 @@ int main(int argc, char** argv) {
         check(argc >= 2, "catalog path");
         const auto catalog = load_catalog(fs::u8path(argv[1]));
         const auto* ui = find_project(catalog, "cyui");
+        const auto* companion = find_project(catalog, "cymcphub");
+        check(companion && is_companion(*companion) && companion->windows_x64.has_value(),
+              "CyMCPHub is a managed companion");
+        const auto bridge = companion_mcp_config(fs::u8path(argv[1]).parent_path());
+        check(bridge["mcpServers"]["CyHub"]["command"].get<std::string>().find("CyHubMCP") != std::string::npos,
+              "CyMCPHub can discover the CyHub stdio server");
         check(ui && matches(*ui, "bibliotheques widgets"), "accent-insensitive catalog search");
         check(matches(*ui, "libraries native widgets"), "English catalog search");
         check(ui->description_for("en") == "Native Dear ImGui components, themes and widgets." &&
@@ -114,6 +121,16 @@ int main(int argc, char** argv) {
         auto preview = *ui;
         preview.include_prerelease = true;
         check(parse_release(preview, metadata).has_value(), "explicit prerelease channel");
+        const auto companion_name = "CyMCPHub-0.3.1-windows-x64.zip";
+        Json companion_asset{{"name", companion_name}, {"id", 123}, {"state", "uploaded"}, {"size", 256},
+                             {"digest", "sha256:" + std::string(64, 'b')},
+                             {"browser_download_url", companion->url() + "/releases/download/v0.3.1/" + companion_name}};
+        const auto companion_release = parse_release(*companion,
+            {{"tag_name", "v0.3.1"}, {"assets", Json::array({companion_asset})}});
+        check(companion_release && (!supports_packages() ||
+            (companion_release->asset && companion_release->asset->api_url ==
+                "https://api.github.com/repos/MrMybal/CyMCPHub/releases/assets/123")),
+            "private update uses the verified GitHub asset ID");
 
         const auto scratch = fs::temp_directory_path() /
             ("cyhub-test-" + std::to_string(cymcp::Clock::now().time_since_epoch().count()));
@@ -127,6 +144,17 @@ int main(int argc, char** argv) {
             check(load_language(preferences) == "en", "language preference is replaced");
 #ifdef _WIN32
             packages(*ui, scratch);
+            if (argc == 4 && std::string_view(argv[2]) == "--companion") {
+                const auto directory = fs::u8path(argv[3]);
+                const auto bundle = bundled_companion(directory);
+                check(bundle && bundle->asset && bundle->asset->url.empty(), "offline CyMCPHub bundle");
+                install_companion(scratch / "companions", directory, *companion, *bundle, {});
+                const auto installed = installed_version(scratch / "companions", *companion);
+                check(installed && installed->version == bundle->tag, "CyMCPHub is active");
+                const auto executable = installed_entry(scratch / "companions", *companion, *installed);
+                check(fs::is_regular_file(executable) &&
+                    fs::is_regular_file(executable.parent_path() / "CyMCPHubMcp.exe"), "companion pair installed");
+            }
             if (argc == 3 && std::string_view(argv[2]) == "--live") {
                 const auto live = latest_release(*ui);
                 check(live && live->asset, "live CyUI Windows asset");

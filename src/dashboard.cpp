@@ -1,5 +1,9 @@
 #include "dashboard.hpp"
+#include "companion.hpp"
 #include "localization.hpp"
+#ifdef _WIN32
+#include "packages.hpp"
+#endif
 
 #include <SDL3/SDL.h>
 #include <cyui/Core.h>
@@ -52,7 +56,7 @@ void subdued_wrapped(const std::string& text) {
 
 Dashboard::Dashboard(SDL_Renderer* renderer, fs::path preferences)
     : catalog_(load_catalog(executable_directory() / "catalog.json")), root_(managed_root()),
-      preferences_(std::move(preferences)) {
+      preferences_(std::move(preferences)), companions_(companion_root()) {
     const auto icons = executable_directory() / "assets" / "icons";
     for (const auto& project : catalog_) {
         status_.try_emplace(project.id);
@@ -65,6 +69,15 @@ Dashboard::Dashboard(SDL_Renderer* renderer, fs::path preferences)
                 SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR);
                 icons_.emplace(project.id, std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)>(texture, SDL_DestroyTexture));
             }
+        }
+    }
+    if (const auto* companion = find_project(catalog_, "cymcphub"); companion && is_companion(*companion)) {
+        auto& status = status_.at(companion->id);
+        try {
+            companion_bundle_ = bundled_companion(executable_directory());
+            status.release = companion_bundle_;
+        } catch (const std::exception& error) {
+            status.error = cymcp::redact_error_message(error.what());
         }
     }
     selected_ = catalog_.front().id;
@@ -80,8 +93,9 @@ void Dashboard::refresh_state() {
     for (const auto& project : catalog_) {
         auto& status = status_.at(project.id);
         try {
-            status.installed = installed_version(root_, project);
-            status.job = update_job(root_, project);
+            const auto& directory = is_companion(project) ? companions_ : root_;
+            status.installed = installed_version(directory, project);
+            status.job = update_job(directory, project);
         } catch (const std::exception& error) {
             status.job = {"error", cymcp::redact_error_message(error.what())};
         }
@@ -101,7 +115,13 @@ void Dashboard::check_projects(std::vector<Project> projects) {
             Check result{project.id, {}, {}};
             bool abort = false;
             try {
-                result.release = latest_release(project, cancel_);
+                result.release = latest_release(project, cancel_, companion_github_token(project));
+                if (is_companion(project)) {
+                    result.remote_package = result.release && result.release->asset;
+                    if (!result.remote_package || (companion_bundle_ &&
+                        !newer_version(companion_bundle_->tag, result.release->tag)))
+                        result.release = companion_bundle_;
+                }
             } catch (const cymcp::Error& error) {
                 result.error = cymcp::redact_error_message(error.what());
                 abort = error.code == "GitHubLimit" || error.code == "NetworkError";
@@ -130,6 +150,7 @@ void Dashboard::collect_checks() {
         if (result.error.empty()) {
             status.release = std::move(result.release);
             status.checked = true;
+            status.remote_package = result.remote_package;
         } else if (state_error_ != result.error) {
             state_error_ = result.error;
             cyui::notify(localized_diagnostic(state_error_).c_str(), cyui::Tone::error);
@@ -147,6 +168,93 @@ bool Dashboard::visible(const Project& project) const {
     return (category_.empty() || project.category == category_) &&
         (!updates_only_ || ready(status_.at(project.id))) &&
         (!skills_only_ || !project.skill.empty()) && matches(project, search_.data());
+}
+
+void Dashboard::queue_install(const Project& project, const Release& release) {
+#ifdef _WIN32
+    if (is_companion(project)) {
+        queued_companion_ = true;
+        queued_ = std::async(std::launch::async,
+            [root = companions_, directory = executable_directory(), project, release, cancel = cancel_] {
+                install_companion(root, directory, project, release, cancel);
+            });
+        return;
+    }
+#endif
+    queued_companion_ = false;
+    queued_ = std::async(std::launch::async, [project, tag = release.tag] { request_update(project, tag); });
+}
+
+void Dashboard::open_project(const Project& project, const Installed& installed) {
+    try {
+#ifdef _WIN32
+        if (is_companion(project)) {
+            if (open_companion(companions_, executable_directory(), project, installed))
+                cyui::notify(cyui::tr("CyMCPHub is already running. Quit it from the tray and reopen here to load the bridge or a new version.").c_str(),
+                             cyui::Tone::info);
+            return;
+        }
+#endif
+        const auto wheel = project.windows_x64->asset.ends_with(".whl");
+        open_installed(installed_entry(root_, project, installed), !wheel);
+    } catch (const std::exception& error) {
+        cyui::notify(localized_diagnostic(error.what()).c_str(), cyui::Tone::error);
+    }
+}
+
+void Dashboard::companion_card() {
+    const auto* project = find_project(catalog_, "cymcphub");
+    if (!project || !is_companion(*project))
+        return;
+    auto& status = status_.at(project->id);
+    const auto& palette = cyui::palette();
+    cyui::ScopedColor background(ImGuiCol_ChildBg, palette.bg2);
+    cyui::ScopedVar padding(ImGuiStyleVar_WindowPadding, dp(14, 11));
+    cyui::ScopedVar rounded(ImGuiStyleVar_ChildRounding, cyui::dp(10));
+    if (ImGui::BeginChild("CyMCPHubCompanion", {0, 0}, ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY)) {
+        cyui::overline(cyui::tr("RECOMMENDED COMPANION").c_str());
+        cyui::heading("CyMCPHub", 2);
+        subdued_wrapped(project->description_for(cyui::locale()));
+        const bool installing = queued_.valid() && queued_companion_;
+        const bool can_install = status.release && status.release->asset && (!status.installed || ready(status));
+        if (can_install) {
+            cyui::ScopedDisabled disabled(queued_.valid());
+            const auto action = installing ? "Installing CyMCPHub…" :
+                status.installed ? "Update CyMCPHub" : "Install CyMCPHub";
+            if (cyui::primaryButton(cyui::trLabel(action).c_str()))
+                queue_install(*project, *status.release);
+        } else if (status.installed) {
+            cyui::ScopedDisabled disabled(installing);
+            if (cyui::primaryButton(cyui::trLabel("Open CyMCPHub").c_str()))
+                open_project(*project, *status.installed);
+        } else if (!supports_packages()) {
+            if (cyui::primaryButton(cyui::trLabel("Open repository").c_str()))
+                open_url(project->url());
+        }
+        if (supports_packages()) {
+            if (can_install && status.installed) {
+                ImGui::SameLine(0, cyui::dp(10));
+                cyui::ScopedDisabled disabled(installing);
+                if (cyui::ghostButton(cyui::trLabel("Open CyMCPHub").c_str()))
+                    open_project(*project, *status.installed);
+            }
+            if (can_install || status.installed)
+                ImGui::SameLine(0, cyui::dp(10));
+            cyui::ScopedDisabled disabled(checking_.load() || installing);
+            if (cyui::ghostButton(cyui::trLabel("Check on GitHub").c_str()))
+                check_projects({*project});
+            ImGui::SameLine(0, cyui::dp(10));
+            if (cyui::ghostButton("GitHub##companion"))
+                open_url(project->url());
+        }
+        if (status.checked && !status.remote_package)
+            subdued_wrapped(cyui::tr("No Windows release is accessible on GitHub. Private releases require GH_TOKEN."));
+        if (!status.error.empty())
+            subdued_wrapped(localized_diagnostic(status.error));
+        if (status.job.phase == "error")
+            subdued_wrapped(localized_diagnostic(status.job.detail));
+    }
+    ImGui::EndChild();
 }
 
 void Dashboard::sidebar() {
@@ -372,13 +480,14 @@ void Dashboard::detail() {
     cyui::textDim("%s  %s", cyui::tr("Installed").c_str(), status.installed ? status.installed->version.c_str() : "—");
     const auto latest = status.release ? status.release->tag :
         cyui::tr(status.checked ? "No stable release" : "Not checked");
-    cyui::textDim("GitHub     %s", latest.c_str());
+    cyui::textDim("%s  %s", cyui::tr(is_companion(*project) ? "Available version" : "GitHub").c_str(), latest.c_str());
     if (!status.error.empty())
         subdued_wrapped(localized_diagnostic(status.error));
 
     ImGui::Dummy(dp(0, 9));
     const auto can_install = status.release && status.release->asset && (!status.installed || is_update);
-    const auto installing = service_running_ && active_job(status.job);
+    const auto companion = is_companion(*project);
+    const auto installing = companion ? queued_.valid() && queued_companion_ : service_running_ && active_job(status.job);
     if (installing)
         cyui::textColoured(cyui::palette().accent, "%s",
             cyui::tr(status.job.phase == "downloading" ? "Downloading…" :
@@ -387,12 +496,11 @@ void Dashboard::detail() {
         subdued_wrapped(localized_diagnostic(status.job.detail));
 
     if (can_install) {
-        cyui::ScopedDisabled disabled(!service_running_ || installing || queued_.valid());
+        cyui::ScopedDisabled disabled((!companion && !service_running_) || installing || queued_.valid());
         if (cyui::primaryButton(cyui::trLabel(is_update ? "Update" : "Install").c_str(), {-1, cyui::dp(35)})) {
-            const auto tag = status.release->tag;
-            queued_ = std::async(std::launch::async, [project = *project, tag] { request_update(project, tag); });
+            queue_install(*project, *status.release);
         }
-        if (!service_running_)
+        if (!companion && !service_running_)
             cyui::tooltip(cyui::tr("Start the CyHub Updater Windows service to install this package.").c_str());
     } else if (status.release && !status.release->asset) {
         subdued_wrapped(cyui::tr("See the release on GitHub."));
@@ -400,13 +508,8 @@ void Dashboard::detail() {
 
     if (status.installed) {
         const auto wheel = project->windows_x64->asset.ends_with(".whl");
-        if (cyui::ghostButton(cyui::trLabel(wheel ? "Open folder" : "Open application").c_str(), {-1, 0})) {
-            try {
-                open_installed(installed_entry(root_, *project, *status.installed), !wheel);
-            } catch (const std::exception& error) {
-                cyui::notify(localized_diagnostic(error.what()).c_str(), cyui::Tone::error);
-            }
-        }
+        if (cyui::ghostButton(cyui::trLabel(wheel ? "Open folder" : "Open application").c_str(), {-1, 0}))
+            open_project(*project, *status.installed);
     }
     if (!project->repo.empty()) {
         {
@@ -416,8 +519,10 @@ void Dashboard::detail() {
                 check_projects({*project});
             }
         }
-        if (cyui::ghostButton(cyui::trLabel(status.release ? "View release" : "Open repository").c_str(), {-1, 0}))
-            open_url(status.release ? status.release->url : project->url());
+        const bool from_github = status.release &&
+            (!companion || !status.release->asset || !status.release->asset->url.empty());
+        if (cyui::ghostButton(cyui::trLabel(from_github ? "View release" : "Open repository").c_str(), {-1, 0}))
+            open_url(from_github ? status.release->url : project->url());
     } else {
         cyui::textFaint("%s", cyui::tr("Local project").c_str());
     }
@@ -481,10 +586,12 @@ void Dashboard::render() {
         try {
             queued_.get();
             refresh_state();
-            cyui::notify(cyui::tr("Request sent to the service.").c_str(), cyui::Tone::success);
+            cyui::notify(cyui::tr(queued_companion_ ? "CyMCPHub is ready to open." :
+                                "Request sent to the service.").c_str(), cyui::Tone::success);
         } catch (const std::exception& error) {
             cyui::notify(localized_diagnostic(error.what()).c_str(), cyui::Tone::error);
         }
+        queued_companion_ = false;
     }
 
     cyui::ScopedVar padding(ImGuiStyleVar_WindowPadding, dp(0, 0));
@@ -501,6 +608,8 @@ void Dashboard::render() {
         cyui::ScopedVar content_padding(ImGuiStyleVar_WindowPadding, dp(22, 20));
         if (ImGui::BeginChild("Collection", {0, 0}, ImGuiChildFlags_AlwaysUseWindowPadding)) {
             hero();
+            if (category_.empty() && !updates_only_)
+                companion_card();
             ImGui::SetNextItemWidth(-1);
             if ((ImGui::GetIO().KeyCtrl || ImGui::GetIO().KeySuper) && ImGui::IsKeyPressed(ImGuiKey_F))
                 ImGui::SetKeyboardFocusHere();

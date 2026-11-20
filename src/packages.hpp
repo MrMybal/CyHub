@@ -9,4 +9,8 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
                       const fs::path& archive, const Cancellation& cancel);
 void install_release(const fs::path& root, const Project& project, std::string_view tag,
                      const Cancellation& cancel);
+void install_companion(const fs::path& root, const fs::path& directory, const Project& project,
+                       const Release& release, const Cancellation& cancel);
+bool open_companion(const fs::path& root, const fs::path& directory,
+                    const Project& project, const Installed& installed);
 }

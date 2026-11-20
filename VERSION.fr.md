@@ -1,12 +1,14 @@
-# CyHub 0.1.0
+# CyHub 0.2.0
 
 [English](VERSION.md) · [README](README.fr.md)
 
 **Statut** en développement.
 
-[Préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.1.0)
+[Préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0)
 
 ## Inclus
+
+- Carte CyMCPHub recommandée avec installation hors ligne de la version 0.3.0, mises à jour par compte et pont MCP pour les skills inclus.
 
 - Catalogue CyUI avec recherche pour les applications, bibliothèques, SDK et extensions.
 - Icônes des projets lorsqu’elles sont disponibles.

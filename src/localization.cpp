@@ -6,6 +6,11 @@
 namespace cyhub {
 namespace {
 constexpr std::pair<std::string_view, std::string_view> diagnostics[] = {
+    {"The bundled CyMCPHub package manifest is invalid.", "Le manifeste du paquet CyMCPHub inclus est invalide."},
+    {"Could not access the CyMCPHub installation directory.", "Impossible d’accéder au dossier d’installation de CyMCPHub."},
+    {"The authenticated GitHub asset is unavailable.", "Le paquet GitHub authentifié est indisponible."},
+    {"Could not prepare the application environment.", "Impossible de préparer l’environnement de l’application."},
+    {"Could not locate the local user data directory.", "Impossible de trouver le dossier de données utilisateur local."},
     {"Unable to read file: ", "Fichier illisible : "},
     {"The file is too large or unreadable.", "Fichier trop volumineux ou illisible."},
     {"CyHub has no skill for this project.", "Ce projet n’a aucun skill dans CyHub."},
@@ -127,6 +132,17 @@ void register_ui_translations() {
         {"Search for a project…", "Rechercher un projet…"},
         {"Could not open the link.", "Impossible d’ouvrir le lien."},
         {"Could not save your language preference.", "Impossible d’enregistrer la langue choisie."},
+        {"RECOMMENDED COMPANION", "APPLICATION RECOMMANDÉE"},
+        {"Install CyMCPHub", "Installer CyMCPHub"},
+        {"Installing CyMCPHub…", "Installation de CyMCPHub…"},
+        {"Update CyMCPHub", "Mettre à jour CyMCPHub"},
+        {"Open CyMCPHub", "Ouvrir CyMCPHub"},
+        {"CyMCPHub is ready to open.", "CyMCPHub est prêt à être ouvert."},
+        {"CyMCPHub is already running. Quit it from the tray and reopen here to load the bridge or a new version.",
+         "CyMCPHub est déjà ouvert. Quitte-le depuis la zone de notification et rouvre-le ici pour charger le pont ou une nouvelle version."},
+        {"Available version", "Version disponible"},
+        {"No Windows release is accessible on GitHub. Private releases require GH_TOKEN.",
+         "Aucune publication Windows n’est accessible sur GitHub. Les publications privées nécessitent GH_TOKEN."},
     });
 }
 

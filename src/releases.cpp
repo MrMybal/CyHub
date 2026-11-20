@@ -133,20 +133,28 @@ std::optional<Release> parse_release(const Project& project, const Json& data) {
             ? item["digest"].get<std::string>() : std::string{};
         const auto size = item.value("size", std::uint64_t{0});
         if (item.value("browser_download_url", "") == expected_url && digest.starts_with("sha256:") &&
-            valid_digest(digest.substr(7)) && size > 0 && size <= max_archive_size)
+            valid_digest(digest.substr(7)) && size > 0 && size <= max_archive_size) {
             release.asset = Asset{name, expected_url, digest.substr(7), size};
+            const auto id = item.value("id", std::uint64_t{0});
+            if (id)
+                release.asset->api_url = "https://api.github.com/repos/" + project.repo +
+                    "/releases/assets/" + std::to_string(id);
+        }
         break;
     }
     return release;
 }
 
-std::optional<Release> latest_release(const Project& project, const Cancellation& cancel) {
+std::optional<Release> latest_release(const Project& project, const Cancellation& cancel,
+                                      std::string_view github_token) {
     if (project.repo.empty())
         return std::nullopt;
     cymcp::HttpRequest request;
     request.url = "https://api.github.com/repos/" + project.repo +
         (project.include_prerelease ? "/releases?per_page=1" : "/releases/latest");
     request.headers["Accept"] = "application/vnd.github+json";
+    if (!github_token.empty())
+        request.headers["Authorization"] = "Bearer " + std::string(github_token);
     request.timeout = std::chrono::seconds(12);
     request.max_response_bytes = 1024 * 1024;
     const auto response = cymcp::HttpClient{}.perform(request, cancel);
@@ -165,9 +173,16 @@ std::optional<Release> latest_release(const Project& project, const Cancellation
 }
 
 cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cancel,
-                                 const cymcp::ChunkSink& sink) {
+                                 const cymcp::ChunkSink& sink, std::string_view github_token) {
     cymcp::HttpRequest request;
     request.url = asset.url;
+    if (!github_token.empty()) {
+        if (!asset.api_url.starts_with("https://api.github.com/repos/MrMybal/CyMCPHub/releases/assets/"))
+            throw std::runtime_error("The authenticated GitHub asset is unavailable.");
+        request.url = asset.api_url;
+        request.headers["Authorization"] = "Bearer " + std::string(github_token);
+        request.headers["Accept"] = "application/octet-stream";
+    }
     request.timeout = std::chrono::minutes(15);
     request.idle_timeout = std::chrono::seconds(25);
     request.max_response_bytes = static_cast<std::size_t>(asset.size);
@@ -183,6 +198,7 @@ cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cance
              !next->second.starts_with("https://objects.githubusercontent.com/")))
             throw std::runtime_error("Download redirect refused.");
         request.url = next->second;
+        request.headers.erase("Authorization");
     }
     throw std::runtime_error("Too many download redirects.");
 }

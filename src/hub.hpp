@@ -31,6 +31,7 @@ using Catalog = std::vector<Project>;
 struct Asset {
     std::string name, url, sha256;
     std::uint64_t size = 0;
+    std::string api_url;
 };
 struct Release {
     std::string tag, url;
@@ -60,18 +61,20 @@ void save_language(const fs::path& file, std::string_view language);
 bool newer_version(std::string_view installed, std::string_view candidate);
 std::string package_entry(const Package& package, std::string_view tag);
 std::optional<Release> parse_release(const Project& project, const Json& data);
-std::optional<Release> latest_release(const Project& project, const Cancellation& cancel = {});
+std::optional<Release> latest_release(const Project& project, const Cancellation& cancel = {},
+                                      std::string_view github_token = {});
 cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cancel,
-                                 const cymcp::ChunkSink& sink);
+                                 const cymcp::ChunkSink& sink, std::string_view github_token = {});
 
 fs::path executable_directory();
 std::string file_url(const fs::path& file);
 fs::path managed_root();
+fs::path companion_root();
 bool supports_packages();
 std::optional<Installed> installed_version(const fs::path& root, const Project& project);
 Job update_job(const fs::path& root, const Project& project);
 fs::path installed_entry(const fs::path& root, const Project& project, const Installed& installed);
 bool updater_running();
 void request_update(const Project& project, std::string_view tag);
-void open_installed(const fs::path& path, bool execute);
+void open_installed(const fs::path& path, bool execute, const fs::path& config = {});
 }

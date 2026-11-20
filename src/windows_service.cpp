@@ -1,4 +1,5 @@
 #include "packages.hpp"
+#include "companion.hpp"
 #include "windows_pipe.hpp"
 
 #include <condition_variable>
@@ -101,7 +102,7 @@ void run_service() {
                 throw std::runtime_error("Invalid request.");
             const auto* project = find_project(catalog, input.at("project").get<std::string>());
             const auto tag = input.at("tag").get<std::string>();
-            if (!project || !project->windows_x64 || !newer_version("", tag))
+            if (!project || !project->windows_x64 || is_companion(*project) || !newer_version("", tag))
                 throw std::runtime_error("The service catalog has no matching package.");
             std::lock_guard lock(mutex);
             if (busy)

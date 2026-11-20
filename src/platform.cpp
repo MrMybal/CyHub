@@ -1,6 +1,7 @@
 #include "hub.hpp"
 
 #include <system_error>
+#include <cwchar>
 #ifdef _WIN32
 #include <windows.h>
 #include <shlobj.h>
@@ -10,6 +11,35 @@
 #endif
 
 namespace cyhub {
+#ifdef _WIN32
+namespace {
+fs::path known_folder(REFKNOWNFOLDERID id, const char* error) {
+    PWSTR path = nullptr;
+    if (FAILED(SHGetKnownFolderPath(id, 0, nullptr, &path)))
+        throw std::runtime_error(error);
+    const std::unique_ptr<wchar_t, decltype(&CoTaskMemFree)> folder(path, CoTaskMemFree);
+    return fs::path(folder.get());
+}
+
+std::wstring environment_without_github_token() {
+    const std::unique_ptr<wchar_t, decltype(&FreeEnvironmentStringsW)> original(
+        GetEnvironmentStringsW(), FreeEnvironmentStringsW);
+    if (!original)
+        throw std::runtime_error("Could not prepare the application environment.");
+    std::wstring environment;
+    for (auto* value = original.get(); *value; value += std::wcslen(value) + 1) {
+        const auto length = std::wcslen(value);
+        if (_wcsnicmp(value, L"GH_TOKEN=", 9) != 0)
+            environment.append(value, length + 1);
+    }
+    if (environment.empty())
+        environment.push_back(L'\0');
+    environment.push_back(L'\0');
+    return environment;
+}
+}
+#endif
+
 fs::path executable_directory() {
 #ifdef _WIN32
     std::wstring path(32768, L'\0');
@@ -51,12 +81,16 @@ std::string file_url(const fs::path& file) {
 
 fs::path managed_root() {
 #ifdef _WIN32
-    PWSTR path = nullptr;
-    const auto result = SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, nullptr, &path);
-    if (FAILED(result))
-        throw std::runtime_error("Could not locate Program Files.");
-    const std::unique_ptr<wchar_t, decltype(&CoTaskMemFree)> folder(path, CoTaskMemFree);
-    return fs::path(folder.get()) / "CyHub" / "Managed";
+    return known_folder(FOLDERID_ProgramFiles, "Could not locate Program Files.") / "CyHub" / "Managed";
+#else
+    return {};
+#endif
+}
+
+fs::path companion_root() {
+#ifdef _WIN32
+    return known_folder(FOLDERID_LocalAppData, "Could not locate the local user data directory.") /
+           "CyHub" / "Companions";
 #else
     return {};
 #endif
@@ -101,7 +135,7 @@ fs::path installed_entry(const fs::path& root, const Project& project, const Ins
     return root / project.id / "versions" / installed.digest / fs::u8path(name);
 }
 
-void open_installed(const fs::path& path, bool execute) {
+void open_installed(const fs::path& path, bool execute, const fs::path& config) {
 #ifdef _WIN32
     if (execute) {
         STARTUPINFOW startup{};
@@ -109,8 +143,11 @@ void open_installed(const fs::path& path, bool execute) {
         PROCESS_INFORMATION process{};
         const auto directory = path.parent_path();
         auto command = L"\"" + path.native() + L"\"";
-        if (!CreateProcessW(path.c_str(), command.data(), nullptr, nullptr, FALSE, 0,
-                            nullptr, directory.c_str(), &startup, &process))
+        auto environment = environment_without_github_token();
+        if (!config.empty())
+            command += L" --config \"" + config.native() + L"\"";
+        if (!CreateProcessW(path.c_str(), command.data(), nullptr, nullptr, FALSE,
+                            CREATE_UNICODE_ENVIRONMENT, environment.data(), directory.c_str(), &startup, &process))
             throw std::system_error(GetLastError(), std::system_category(), "Could not launch the application");
         CloseHandle(process.hProcess);
         CloseHandle(process.hThread);
@@ -123,6 +160,7 @@ void open_installed(const fs::path& path, bool execute) {
 #else
     (void)path;
     (void)execute;
+    (void)config;
     throw std::runtime_error("Managed installation is available on Windows x64.");
 #endif
 }

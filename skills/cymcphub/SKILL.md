@@ -7,7 +7,7 @@ description: Inventorier les connexions MCP locales, CLI et intégrations SDK av
 
 ## Connexion
 
-Utilise la configuration stdio décrite dans le README de la distribution. Les vues MCP, SDK et CLI inventorient des sources différentes. Identifie la source ou le dossier ciblé avant de lancer la lecture.
+Installe puis ouvre CyMCPHub depuis CyHub pour charger le connecteur CyHub. Dans CyMCPHub, choisis ce connecteur puis **Skills → Collecter les skills du connecteur** pour ajouter les guides de CyHub. Pour un autre client IA, utilise la configuration stdio ou HTTP proposée dans **AI setup** de CyMCPHub.
 
 ## Utilisation
 

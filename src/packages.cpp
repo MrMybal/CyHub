@@ -1,4 +1,5 @@
 #include "packages.hpp"
+#include "companion.hpp"
 
 #include <miniz.h>
 #include <picosha2.h>
@@ -16,6 +17,21 @@ struct Scratch {
         std::error_code error;
         fs::remove_all(path, error);
     }
+};
+
+struct CompanionLock {
+    HANDLE handle;
+    explicit CompanionLock(const fs::path& project_root) {
+        fs::create_directories(project_root);
+        handle = CreateFileW((project_root / "install.lock").c_str(), GENERIC_WRITE, 0, nullptr,
+                             OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (handle == INVALID_HANDLE_VALUE) {
+            if (GetLastError() == ERROR_SHARING_VIOLATION)
+                throw std::runtime_error("An installation is already in progress.");
+            throw std::runtime_error("Could not access the CyMCPHub installation directory.");
+        }
+    }
+    ~CompanionLock() { CloseHandle(handle); }
 };
 
 void write_state(const fs::path& path, const Json& json) {
@@ -149,6 +165,10 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
     if (!portable_path(name))
         throw std::runtime_error("Invalid package entry point.");
     const auto entry = fs::u8path(name);
+    const auto complete = [&](const fs::path& location) {
+        return fs::is_regular_file(location / entry) &&
+            (!is_companion(project) || fs::is_regular_file(location / "CyMCPHubMcp.exe"));
+    };
 
     if (!fs::exists(final)) {
         Scratch staging{project_root / "pending"};
@@ -158,43 +178,87 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
             extract_archive(archive, staging.path, cancel);
         else
             fs::copy_file(archive, staging.path / entry);
-        if (!fs::is_regular_file(staging.path / entry))
+        if (!complete(staging.path))
             throw std::runtime_error("The main file is missing from the package.");
         cancel.check();
         fs::create_directories(final.parent_path());
         fs::rename(staging.path, final);
     }
-    if (!fs::is_regular_file(final / entry))
+    if (!complete(final))
         throw std::runtime_error("The version directory is incomplete.");
     cancel.check();
     write_state(project_root / "current.json", {{"version", release.tag}, {"digest", asset.sha256}});
 }
 
-void install_release(const fs::path& root, const Project& project, std::string_view tag, const Cancellation& cancel) {
-    set_job(root, project, "checking");
-    const auto release = latest_release(project, cancel);
-    if (!release || release->tag != tag || !release->asset)
+static void install_package(const fs::path& root, const fs::path& directory, const Project& project,
+                            const Release& release, const Cancellation& cancel, std::string_view token) {
+    if (!release.asset)
         throw std::runtime_error("The requested package changed or is unavailable.");
     const auto current = installed_version(root, project);
-    if (current && current->version == tag)
+    if (current && current->version == release.tag)
         return;
-    if (current && !newer_version(current->version, tag))
+    if (current && !newer_version(current->version, release.tag))
         throw std::runtime_error("This version is older than the active installation.");
 
+    if (!directory.empty()) {
+        set_job(root, project, "verifying");
+        activate_archive(root, project, release, directory / "CyMCPHub-bundled.zip", cancel);
+        return;
+    }
     set_job(root, project, "downloading");
     Scratch archive{root / project.id / "pending.package"};
     std::ofstream output(archive.path, std::ios::binary | std::ios::trunc);
     if (!output)
         throw std::runtime_error("Could not create the download file.");
-    const auto response = download_asset(*release->asset, cancel, [&](const char* bytes, std::size_t count) {
+    const auto response = download_asset(*release.asset, cancel, [&](const char* bytes, std::size_t count) {
         output.write(bytes, static_cast<std::streamsize>(count));
         return static_cast<bool>(output);
-    });
+    }, token);
     output.close();
     if (response.status != 200 || !output)
         throw std::runtime_error("Download incomplete or refused (HTTP " + std::to_string(response.status) + ").");
     cancel.check();
     set_job(root, project, "verifying");
-    activate_archive(root, project, *release, archive.path, cancel);
+    activate_archive(root, project, release, archive.path, cancel);
+}
+
+void install_release(const fs::path& root, const Project& project, std::string_view tag, const Cancellation& cancel) {
+    set_job(root, project, "checking");
+    const auto release = latest_release(project, cancel);
+    if (!release || release->tag != tag)
+        throw std::runtime_error("The requested package changed or is unavailable.");
+    install_package(root, {}, project, *release, cancel, {});
+}
+
+void install_companion(const fs::path& root, const fs::path& directory, const Project& project,
+                       const Release& release, const Cancellation& cancel) {
+    if (!is_companion(project) || root.empty() || !release.asset)
+        throw std::runtime_error("The requested package changed or is unavailable.");
+    const CompanionLock lock(root / project.id);
+    try {
+        const bool bundled = release.asset->url.empty();
+        install_package(root, bundled ? directory : fs::path{}, project, release, cancel,
+                        bundled ? std::string{} : companion_github_token(project));
+        set_job(root, project, "done");
+    } catch (const std::exception& error) {
+        try {
+            set_job(root, project, "error", cymcp::redact_error_message(error.what()));
+        } catch (const std::exception&) {
+            // Preserve the download or installation error if the state can't be written.
+        }
+        throw;
+    }
+}
+
+bool open_companion(const fs::path& root, const fs::path& directory,
+                    const Project& project, const Installed& installed) {
+    const auto running = OpenMutexW(SYNCHRONIZE, FALSE, L"Local\\CyMCPHub.SingleInstance");
+    if (running)
+        CloseHandle(running);
+    const auto config = root / project.id / "cyhub-mcp.json";
+    const CompanionLock lock(config.parent_path());
+    write_state(config, companion_mcp_config(directory));
+    open_installed(installed_entry(root, project, installed), true, config);
+    return running != nullptr;
 }
 }

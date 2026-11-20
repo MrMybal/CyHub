@@ -23,12 +23,14 @@ private:
         Job job;
         std::optional<Release> release;
         bool checked = false;
+        bool remote_package = false;
         std::string error;
     };
     struct Check {
         std::string id;
         std::optional<Release> release;
         std::string error;
+        bool remote_package = false;
     };
 
     void refresh_state();
@@ -37,15 +39,19 @@ private:
     void sidebar();
     void language_picker();
     void hero();
+    void companion_card();
     void project_list();
     void detail();
     void skill_popup(const Project& project);
     void open_manual();
+    void queue_install(const Project& project, const Release& release);
+    void open_project(const Project& project, const Installed& installed);
     bool visible(const Project& project) const;
     bool ready(const Status& status) const;
 
     Catalog catalog_;
-    fs::path root_, preferences_;
+    fs::path root_, preferences_, companions_;
+    std::optional<Release> companion_bundle_;
     std::map<std::string, std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)>> icons_;
     std::map<std::string, Status> status_;
     std::vector<std::string> categories_;
@@ -64,5 +70,6 @@ private:
     std::atomic_bool checking_{false};
     std::jthread worker_;
     std::future<void> queued_;
+    bool queued_companion_ = false;
 };
 }
