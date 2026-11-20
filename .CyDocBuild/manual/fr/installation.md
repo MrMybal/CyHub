@@ -5,12 +5,12 @@ description: Démarrer l’application Windows et activer le service de mise à 
 section: CyHub
 parent: overview
 order: 1
-sourceRevision: 4
+sourceRevision: 5
 ---
 
 ## Ouvrir CyHub {#launch}
 
-1. Télécharge `CyHub-windows-x64.zip` depuis la [préversion GitHub](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0) et extrais-le dans un dossier.
+1. Télécharge `CyHub-windows-x64.zip` depuis la [préversion GitHub](https://github.com/MrMybal/CyHub/releases/tag/v0.3.0) et extrais-le dans un dossier.
 2. Ouvre `CyHub.exe`. Garde le catalogue, les icônes, les skills et le dossier `Documentation` à côté de l’exécutable.
 3. Choisis **Language → Français** si tu souhaites passer l’interface en français. Sélectionne un projet, puis clique sur **Vérifier sur GitHub** pour voir sa dernière publication.
 

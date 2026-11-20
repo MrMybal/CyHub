@@ -63,6 +63,8 @@ std::string package_entry(const Package& package, std::string_view tag);
 std::optional<Release> parse_release(const Project& project, const Json& data);
 std::optional<Release> latest_release(const Project& project, const Cancellation& cancel = {},
                                       std::string_view github_token = {});
+std::string github_project_token(const Project& project);
+std::optional<Release> discover_release(const Project& project, const Cancellation& cancel = {});
 cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cancel,
                                  const cymcp::ChunkSink& sink, std::string_view github_token = {});
 

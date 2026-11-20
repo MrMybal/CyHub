@@ -9,8 +9,8 @@
     <td width="400" align="center" valign="middle"><strong>CyHub</strong></td>
     <td width="300" align="right" valign="top">
       <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
-      <p><sub>Version</sub><br><a href="VERSION.fr.md"><strong>0.2.0</strong></a><br><strong>EN DÉVELOPPEMENT</strong></p>
-      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.2.0"><strong>Préversion Windows x64</strong></a></p>
+      <p><sub>Version</sub><br><a href="VERSION.fr.md"><strong>0.3.0</strong></a><br><strong>EN DÉVELOPPEMENT</strong></p>
+      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.3.0"><strong>Préversion Windows x64</strong></a></p>
     </td>
   </tr>
 </table>
@@ -19,7 +19,7 @@
 
 CyHub rassemble les applications, bibliothèques, SDK et extensions de l’écosystème Cy dans un catalogue de bureau. Recherche un projet, consulte sa dernière publication GitHub et ouvre son guide MCP depuis la même fiche.
 
-> **EN DÉVELOPPEMENT · 0.2.0**
+> **EN DÉVELOPPEMENT · 0.3.0**
 >
 > La préversion Windows x64 inclut le bureau, le service de mise à jour, le serveur MCP et le manuel hors ligne. Voir les [notes de version et limites](VERSION.fr.md).
 
@@ -27,7 +27,8 @@ CyHub rassemble les applications, bibliothèques, SDK et extensions de l’écos
 
 ## Le catalogue CyHub
 
-- **59 projets** regroupés par type, avec descriptions, icônes disponibles et liens vers les dépôts.
+- **60 projets** regroupés par type, avec descriptions, icônes disponibles et liens vers les dépôts.
+- **Applications installées** détecte automatiquement les projets du catalogue sous Windows. **Mises à jour** compare les versions installées connues aux publications GitHub accessibles.
 - **14 projets configurés pour l’installation gérée** par le service Windows. Le service vérifie le SHA-256 publié et reste actif après la fermeture de la fenêtre.
 - **32 skills MCP** à lire ou copier dans CyHub. Le serveur stdio fondé sur CyMCPSDK expose aussi le catalogue, les vérifications de version et les guides en lecture seule.
 
@@ -41,7 +42,7 @@ Ouvre CyMCPHub depuis CyHub pour charger la source MCP **CyHub**. Dans CyMCPHub,
 
 ## Installation
 
-Télécharge `CyHub-windows-x64.zip` depuis la [préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0) et extrais l’archive complète. Ouvre `CyHub.exe` dans le dossier extrait. Les binaires Windows utilisent le [runtime Microsoft Visual C++ x64](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
+Télécharge `CyHub-windows-x64.zip` depuis la [préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.3.0) et extrais l’archive complète. Ouvre `CyHub.exe` dans le dossier extrait. Les binaires Windows utilisent le [runtime Microsoft Visual C++ x64](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
 
 CyHub démarre en anglais. Dans la barre latérale, choisis **Language → Français**. CyHub mémorise ton choix.
 

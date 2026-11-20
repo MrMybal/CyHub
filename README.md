@@ -9,8 +9,8 @@
     <td width="400" align="center" valign="middle"><strong>CyHub</strong></td>
     <td width="300" align="right" valign="top">
       <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
-      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.2.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
-      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.2.0"><strong>Windows x64 preview</strong></a></p>
+      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.3.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
+      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.3.0"><strong>Windows x64 preview</strong></a></p>
     </td>
   </tr>
 </table>
@@ -19,7 +19,7 @@
 
 CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions into one desktop catalog. Find a project, check its latest GitHub release and open its MCP guide from the same project panel.
 
-> **IN DEVELOPMENT · 0.2.0**
+> **IN DEVELOPMENT · 0.3.0**
 >
 > The Windows x64 preview includes the desktop app, update service, MCP server and offline manual. See the [version notes and limitations](VERSION.md).
 
@@ -27,7 +27,8 @@ CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions int
 
 ## The CyHub catalog
 
-- **59 projects** organized by type, with descriptions, available artwork and repository links.
+- **60 projects** organized by type, with descriptions, available artwork and repository links.
+- **Installed apps** automatically finds catalog projects on Windows. **Updates** compares known installed versions with accessible GitHub releases.
 - **14 projects configured for managed installation** through the Windows service. The service verifies the published SHA-256 and continues working after the window closes.
 - **32 MCP skills** to read or copy in CyHub. The CyMCPSDK stdio server also exposes the catalog, release checks and guides through read-only tools.
 
@@ -41,7 +42,7 @@ Open CyMCPHub from CyHub to load the **CyHub** MCP source. In CyMCPHub, select t
 
 ## Installation
 
-Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
+Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.3.0) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
 
 CyHub starts in English. Use **Language** in the sidebar to switch to French. CyHub remembers your choice.
 

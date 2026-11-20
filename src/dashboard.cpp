@@ -74,14 +74,15 @@ Dashboard::Dashboard(SDL_Renderer* renderer, fs::path preferences)
     if (const auto* companion = find_project(catalog_, "cymcphub"); companion && is_companion(*companion)) {
         auto& status = status_.at(companion->id);
         try {
-            companion_bundle_ = bundled_companion(executable_directory());
-            status.release = companion_bundle_;
+            status.bundle = bundled_companion(executable_directory());
         } catch (const std::exception& error) {
             status.error = cymcp::redact_error_message(error.what());
         }
     }
     selected_ = catalog_.front().id;
     refresh_state();
+    if (supports_installation_detection())
+        scan_installations();
 }
 
 Dashboard::~Dashboard() {
@@ -103,6 +104,35 @@ void Dashboard::refresh_state() {
     next_state_check_ = cymcp::Clock::now() + std::chrono::milliseconds(900);
 }
 
+void Dashboard::scan_installations(bool check_catalog) {
+    if (!supports_installation_detection()) {
+        check_projects(catalog_);
+        return;
+    }
+    check_catalog_ = check_catalog;
+    inventory_ = std::async(std::launch::async, [this] { return detect_installations(catalog_, cancel_); });
+}
+
+void Dashboard::collect_inventory() {
+    if (!inventory_.valid() || inventory_.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
+        return;
+    try {
+        auto detected = inventory_.get();
+        for (auto& [id, status] : status_) {
+            auto entry = detected.extract(id);
+            status.detected = entry.empty() ? std::nullopt : std::optional{std::move(entry.mapped())};
+        }
+    } catch (const std::exception&) {
+        cyui::notify(cyui::tr("Could not scan Windows installations.").c_str(), cyui::Tone::error);
+    }
+    std::vector<Project> projects;
+    for (const auto& project : catalog_)
+        if (check_catalog_ || !status_.at(project.id).installed_tag().empty())
+            projects.push_back(project);
+    if (!projects.empty())
+        check_projects(std::move(projects));
+}
+
 void Dashboard::check_projects(std::vector<Project> projects) {
     if (checking_.exchange(true))
         return;
@@ -115,13 +145,7 @@ void Dashboard::check_projects(std::vector<Project> projects) {
             Check result{project.id, {}, {}};
             bool abort = false;
             try {
-                result.release = latest_release(project, cancel_, companion_github_token(project));
-                if (is_companion(project)) {
-                    result.remote_package = result.release && result.release->asset;
-                    if (!result.remote_package || (companion_bundle_ &&
-                        !newer_version(companion_bundle_->tag, result.release->tag)))
-                        result.release = companion_bundle_;
-                }
+                result.release = discover_release(project, cancel_);
             } catch (const cymcp::Error& error) {
                 result.error = cymcp::redact_error_message(error.what());
                 abort = error.code == "GitHubLimit" || error.code == "NetworkError";
@@ -150,7 +174,6 @@ void Dashboard::collect_checks() {
         if (result.error.empty()) {
             status.release = std::move(result.release);
             status.checked = true;
-            status.remote_package = result.remote_package;
         } else if (state_error_ != result.error) {
             state_error_ = result.error;
             cyui::notify(localized_diagnostic(state_error_).c_str(), cyui::Tone::error);
@@ -159,15 +182,35 @@ void Dashboard::collect_checks() {
     }
 }
 
-bool Dashboard::ready(const Status& status) const {
-    return status.release && status.installed &&
-        newer_version(status.installed->version, status.release->tag);
+bool Dashboard::Status::present() const { return installed || detected; }
+
+std::string_view Dashboard::Status::installed_tag() const {
+    return installed ? installed->version : detected ? std::string_view(detected->version) : std::string_view{};
+}
+
+const Release* Dashboard::Status::available_release() const {
+    if (bundle && (installed || !detected) &&
+        (!release || !release->asset || !newer_version(bundle->tag, release->tag)))
+        return &*bundle;
+    return release ? &*release : nullptr;
+}
+
+bool Dashboard::Status::update_available() const {
+    const auto* candidate = available_release();
+    return candidate && !installed_tag().empty() && newer_version(installed_tag(), candidate->tag);
+}
+
+bool Dashboard::Status::can_install() const {
+    const auto* candidate = available_release();
+    return candidate && candidate->asset && (!present() || (installed && update_available()));
 }
 
 bool Dashboard::visible(const Project& project) const {
-    return (category_.empty() || project.category == category_) &&
-        (!updates_only_ || ready(status_.at(project.id))) &&
-        (!skills_only_ || !project.skill.empty()) && matches(project, search_.data());
+    const auto& status = status_.at(project.id);
+    return (view_ != View::category || project.category == category_) &&
+        (view_ != View::installed || status.present()) &&
+        (view_ != View::updates || status.update_available()) &&
+        (view_ != View::skills || !project.skill.empty()) && matches(project, search_.data());
 }
 
 void Dashboard::queue_install(const Project& project, const Release& release) {
@@ -216,17 +259,21 @@ void Dashboard::companion_card() {
         cyui::heading("CyMCPHub", 2);
         subdued_wrapped(project->description_for(cyui::locale()));
         const bool installing = queued_.valid() && queued_companion_;
-        const bool can_install = status.release && status.release->asset && (!status.installed || ready(status));
+        const bool can_install = status.can_install() && (status.present() || !inventory_.valid());
         if (can_install) {
             cyui::ScopedDisabled disabled(queued_.valid());
             const auto action = installing ? "Installing CyMCPHub…" :
                 status.installed ? "Update CyMCPHub" : "Install CyMCPHub";
             if (cyui::primaryButton(cyui::trLabel(action).c_str()))
-                queue_install(*project, *status.release);
+                queue_install(*project, *status.available_release());
         } else if (status.installed) {
             cyui::ScopedDisabled disabled(installing);
             if (cyui::primaryButton(cyui::trLabel("Open CyMCPHub").c_str()))
                 open_project(*project, *status.installed);
+        } else if (status.detected) {
+            subdued_wrapped(cyui::tr("Detected on Windows"));
+            if (status.update_available() && cyui::primaryButton(cyui::trLabel("View release").c_str()))
+                open_url(status.release->url);
         } else if (!supports_packages()) {
             if (cyui::primaryButton(cyui::trLabel("Open repository").c_str()))
                 open_url(project->url());
@@ -240,14 +287,14 @@ void Dashboard::companion_card() {
             }
             if (can_install || status.installed)
                 ImGui::SameLine(0, cyui::dp(10));
-            cyui::ScopedDisabled disabled(checking_.load() || installing);
+            cyui::ScopedDisabled disabled(inventory_.valid() || checking_.load() || installing);
             if (cyui::ghostButton(cyui::trLabel("Check on GitHub").c_str()))
                 check_projects({*project});
             ImGui::SameLine(0, cyui::dp(10));
             if (cyui::ghostButton("GitHub##companion"))
                 open_url(project->url());
         }
-        if (status.checked && !status.remote_package)
+        if (status.checked && !status.release)
             subdued_wrapped(cyui::tr("No Windows release is accessible on GitHub. Private releases require GH_TOKEN."));
         if (!status.error.empty())
             subdued_wrapped(localized_diagnostic(status.error));
@@ -275,34 +322,32 @@ void Dashboard::sidebar() {
         cyui::sidebarGroup(cyui::tr("Catalog").c_str());
         const auto count = std::to_string(catalog_.size());
         if (cyui::sidebarItem(cyui::icon::grid, cyui::trLabel("All projects").c_str(),
-                category_.empty() && !updates_only_ && !skills_only_, count.c_str())) {
-            category_.clear();
-            updates_only_ = false;
-            skills_only_ = false;
+                view_ == View::all, count.c_str()))
+            view_ = View::all;
+        if (supports_installation_detection()) {
+            const auto installed = std::to_string(std::ranges::count_if(status_, [](const auto& pair) {
+                return pair.second.present();
+            }));
+            if (cyui::sidebarItem(cyui::icon::check, cyui::trLabel("Installed apps").c_str(),
+                                  view_ == View::installed, installed.c_str()))
+                view_ = View::installed;
         }
-        const auto updates = std::ranges::count_if(status_, [this](const auto& pair) { return ready(pair.second); });
+        const auto updates = std::ranges::count_if(status_, [](const auto& pair) { return pair.second.update_available(); });
         const auto available = std::to_string(updates);
-        if (cyui::sidebarItem(cyui::icon::download, cyui::trLabel("Updates").c_str(), updates_only_, available.c_str())) {
-            category_.clear();
-            updates_only_ = true;
-            skills_only_ = false;
-        }
+        if (cyui::sidebarItem(cyui::icon::download, cyui::trLabel("Updates").c_str(), view_ == View::updates, available.c_str()))
+            view_ = View::updates;
         const auto skills = std::to_string(std::ranges::count_if(catalog_, [](const auto& project) {
             return !project.skill.empty();
         }));
-        if (cyui::sidebarItem(cyui::icon::code, cyui::trLabel("MCP Skills").c_str(), skills_only_, skills.c_str())) {
-            category_.clear();
-            updates_only_ = false;
-            skills_only_ = true;
-        }
+        if (cyui::sidebarItem(cyui::icon::code, cyui::trLabel("MCP Skills").c_str(), view_ == View::skills, skills.c_str()))
+            view_ = View::skills;
         ImGui::Dummy(dp(0, 15));
         cyui::sidebarGroup(cyui::tr("By category").c_str());
         for (const auto& category : categories_) {
             const auto label = std::string(category_for(category, cyui::locale())) + "###" + category;
-            if (cyui::sidebarItem(category_icon(category), label.c_str(), category_ == category)) {
+            if (cyui::sidebarItem(category_icon(category), label.c_str(), view_ == View::category && category_ == category)) {
                 category_ = category;
-                updates_only_ = false;
-                skills_only_ = false;
+                view_ = View::category;
             }
         }
 
@@ -367,18 +412,35 @@ void Dashboard::hero() {
     ImGui::SetCursorPos({start.x + cyui::dp(22), start.y + cyui::dp(20)});
     {
         cyui::ScopedFont big(cyui::boldFont(), 1.95f);
-        ImGui::TextUnformatted(cyui::tr(skills_only_ ? "MCP Skills" : "Your collection").c_str());
+        const char* title = "Your collection";
+        if (view_ == View::skills)
+            title = "MCP Skills";
+        else if (view_ == View::installed)
+            title = "Installed apps";
+        else if (view_ == View::updates)
+            title = "Updates";
+        ImGui::TextUnformatted(cyui::tr(title).c_str());
     }
     ImGui::SetCursorPosX(start.x + cyui::dp(22));
-    cyui::textDim("%s", cyui::tr(skills_only_ ? "Connection guides for AI agents."
-                                            : "Applications, libraries and extensions.").c_str());
+    const char* subtitle = "Applications, libraries and extensions.";
+    if (view_ == View::skills)
+        subtitle = "Connection guides for AI agents.";
+    else if (view_ == View::installed)
+        subtitle = "Projects found on this PC.";
+    else if (view_ == View::updates)
+        subtitle = "Newer versions for installed projects.";
+    cyui::textDim("%s", cyui::tr(subtitle).c_str());
     const bool checking = checking_.load();
+    const bool scanning = inventory_.valid();
     ImGui::SetCursorPos({start.x + size.x - cyui::dp(167), start.y + cyui::dp(22)});
     {
-        cyui::ScopedDisabled disabled(checking);
-        if (cyui::primaryButton(cyui::trLabel(checking ? "Checking…" : "Check all").c_str(), dp(145, 35))) {
+        cyui::ScopedDisabled disabled(scanning || checking);
+        const bool installed_only = view_ == View::installed || view_ == View::updates;
+        const char* action = scanning ? "Scanning…" : checking ? "Checking…" :
+            view_ == View::installed ? "Scan again" : view_ == View::updates ? "Check for updates" : "Check all";
+        if (cyui::primaryButton(cyui::trLabel(action).c_str(), dp(145, 35))) {
             state_error_.clear();
-            check_projects(catalog_);
+            scan_installations(!installed_only);
         }
     }
     ImGui::SetCursorPos({start.x, start.y + height});
@@ -427,8 +489,10 @@ void Dashboard::project_list() {
             cyui::centredText(draw, icon_min, icon_max, selected ? palette.accent : palette.textDim,
                               fallback_icon(project));
         }
-        const auto is_update = ready(status);
-        const auto tag = is_update ? status.release->tag : status.installed ? status.installed->version : "";
+        const auto is_update = status.update_available();
+        const auto tag = is_update ? status.available_release()->tag :
+            !status.installed_tag().empty() ? std::string(status.installed_tag()) :
+            status.detected ? cyui::tr("Version unknown") : "";
         float right = cyui::dp(13);
         if (!tag.empty()) {
             right += ImGui::CalcTextSize(tag.c_str()).x + cyui::dp(14);
@@ -447,8 +511,21 @@ void Dashboard::project_list() {
                                palette.textDim, project.description_for(cyui::locale()).c_str());
         }
     }
-    if (!any)
-        cyui::textDim("%s", cyui::tr(updates_only_ ? "No updates found." : "No projects match your search.").c_str());
+    if (!any) {
+        const char* message = "No projects match your search.";
+        if (view_ == View::installed || view_ == View::updates) {
+            if (inventory_.valid())
+                message = "Looking for installed apps…";
+            else if (view_ == View::updates && checking_.load())
+                message = "Checking installed versions on GitHub…";
+            else if (search_.front() == '\0')
+                message = view_ == View::installed ? "No catalog projects were detected on this PC." :
+                    "No newer accessible releases found for installed projects.";
+        }
+        subdued_wrapped(cyui::tr(message));
+        if (view_ == View::updates && !state_error_.empty() && !checking_.load())
+            subdued_wrapped(localized_diagnostic(state_error_));
+    }
 }
 
 void Dashboard::detail() {
@@ -467,25 +544,35 @@ void Dashboard::detail() {
     subdued_wrapped(project->description_for(cyui::locale()));
     ImGui::Dummy(dp(0, 7));
 
-    const auto is_update = ready(status);
+    const auto* candidate = status.available_release();
+    const auto is_update = status.update_available();
     if (is_update)
         cyui::badge(cyui::tr("Update available").c_str(), cyui::Tone::success);
     else if (status.installed)
         cyui::badge(cyui::tr("Installed by CyHub").c_str(), cyui::Tone::info);
-    else if (status.release && status.release->asset)
+    else if (status.detected)
+        cyui::badge(cyui::tr("Detected on Windows").c_str(), cyui::Tone::info);
+    else if (candidate && candidate->asset)
         cyui::badge(cyui::tr("Package available").c_str(), cyui::Tone::info);
     ImGui::Dummy(dp(0, 12));
     ImGui::Separator();
     cyui::sectionTitle(cyui::tr("Versions").c_str());
-    cyui::textDim("%s  %s", cyui::tr("Installed").c_str(), status.installed ? status.installed->version.c_str() : "—");
-    const auto latest = status.release ? status.release->tag :
-        cyui::tr(status.checked ? "No stable release" : "Not checked");
+    const auto local_version = !status.installed_tag().empty() ? std::string(status.installed_tag()) :
+        status.detected ? cyui::tr("Version unknown") : "—";
+    cyui::textDim("%s  %s", cyui::tr("Installed").c_str(), local_version.c_str());
+    if (!status.installed && status.detected) {
+        const auto source = status.detected->source;
+        cyui::textFaint("%s", cyui::tr(source == InstallationSource::registry ? "Source · Windows registry" :
+            source == InstallationSource::shortcut ? "Source · Windows shortcut" : "Source · Local executable").c_str());
+    }
+    const auto latest = candidate ? candidate->tag :
+        cyui::tr(project->repo.empty() ? "Local project" : status.checked ? "No accessible release" : "Not checked");
     cyui::textDim("%s  %s", cyui::tr(is_companion(*project) ? "Available version" : "GitHub").c_str(), latest.c_str());
     if (!status.error.empty())
         subdued_wrapped(localized_diagnostic(status.error));
 
     ImGui::Dummy(dp(0, 9));
-    const auto can_install = status.release && status.release->asset && (!status.installed || is_update);
+    const auto can_install = status.can_install() && (status.present() || !inventory_.valid());
     const auto companion = is_companion(*project);
     const auto installing = companion ? queued_.valid() && queued_companion_ : service_running_ && active_job(status.job);
     if (installing)
@@ -498,12 +585,12 @@ void Dashboard::detail() {
     if (can_install) {
         cyui::ScopedDisabled disabled((!companion && !service_running_) || installing || queued_.valid());
         if (cyui::primaryButton(cyui::trLabel(is_update ? "Update" : "Install").c_str(), {-1, cyui::dp(35)})) {
-            queue_install(*project, *status.release);
+            queue_install(*project, *candidate);
         }
         if (!companion && !service_running_)
             cyui::tooltip(cyui::tr("Start the CyHub Updater Windows service to install this package.").c_str());
-    } else if (status.release && !status.release->asset) {
-        subdued_wrapped(cyui::tr("See the release on GitHub."));
+    } else if (is_update && status.detected && !status.installed) {
+        subdued_wrapped(cyui::tr("Update this installation from its GitHub release."));
     }
 
     if (status.installed) {
@@ -513,14 +600,13 @@ void Dashboard::detail() {
     }
     if (!project->repo.empty()) {
         {
-            cyui::ScopedDisabled disabled(checking_.load());
+            cyui::ScopedDisabled disabled(inventory_.valid() || checking_.load());
             if (cyui::ghostButton(cyui::trLabel("Check on GitHub").c_str(), {-1, 0})) {
                 state_error_.clear();
                 check_projects({*project});
             }
         }
-        const bool from_github = status.release &&
-            (!companion || !status.release->asset || !status.release->asset->url.empty());
+        const bool from_github = status.release.has_value();
         if (cyui::ghostButton(cyui::trLabel(from_github ? "View release" : "Open repository").c_str(), {-1, 0}))
             open_url(from_github ? status.release->url : project->url());
     } else {
@@ -580,6 +666,7 @@ void Dashboard::open_manual() {
 
 void Dashboard::render() {
     collect_checks();
+    collect_inventory();
     if (cymcp::Clock::now() >= next_state_check_)
         refresh_state();
     if (queued_.valid() && queued_.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
@@ -608,7 +695,7 @@ void Dashboard::render() {
         cyui::ScopedVar content_padding(ImGuiStyleVar_WindowPadding, dp(22, 20));
         if (ImGui::BeginChild("Collection", {0, 0}, ImGuiChildFlags_AlwaysUseWindowPadding)) {
             hero();
-            if (category_.empty() && !updates_only_)
+            if (view_ == View::all || view_ == View::skills)
                 companion_card();
             ImGui::SetNextItemWidth(-1);
             if ((ImGui::GetIO().KeyCtrl || ImGui::GetIO().KeySuper) && ImGui::IsKeyPressed(ImGuiKey_F))

@@ -97,6 +97,10 @@ int main(int argc, char** argv) {
         check(newer_version("v1.2.9", "v1.10.0"), "version comparison");
         check(newer_version("v2.0.0-alpha.8", "v2.0.0-alpha.12"), "prerelease comparison");
         check(newer_version("v2.0.0-beta", "v2.0.0"), "stable supersedes prerelease");
+        check(!newer_version("2.4.1.0", "v2.4.1"), "zero Windows revision equals release tag");
+        check(newer_version("2.4.1.5", "v2.4.1.6"), "compare Windows revisions");
+        check(!newer_version("2.4.1.5", "v2.4.1"), "preserve newer Windows revision");
+        check(newer_version("2.4.1.5", "v2.4.2"), "compare Windows revision with newer patch");
         check(!newer_version("v2.0.0", "v2.0.0+build"), "build data is not an upgrade");
         check(!newer_version("v2.0.0", "v1.9.0"), "reject downgrade");
         check(portable_path("sub/Program.exe") && !portable_path("../test") &&

@@ -1,26 +1,12 @@
 #include "companion.hpp"
 
-#include <algorithm>
-#include <cstdlib>
-
 namespace cyhub {
 bool is_companion(const Project& project) {
     return project.id == "cymcphub" && project.repo == "MrMybal/CyMCPHub";
 }
 
 std::string companion_github_token(const Project& project) {
-    if (!is_companion(project))
-        return {};
-    const auto* environment = std::getenv("GH_TOKEN");
-    if (!environment)
-        return {};
-    const std::string_view token(environment);
-    if (token.size() > 4096 || !std::ranges::all_of(token, [](char c) {
-            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                   (c >= '0' && c <= '9') || c == '_' || c == '-';
-        }))
-        return {};
-    return std::string(token);
+    return is_companion(project) ? github_project_token(project) : "";
 }
 
 std::optional<Release> bundled_companion(const fs::path& directory) {

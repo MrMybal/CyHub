@@ -1,14 +1,15 @@
 #include "hub.hpp"
+#include "companion.hpp"
 
 #include <algorithm>
 #include <array>
 #include <charconv>
-#include <tuple>
+#include <cstdlib>
 
 namespace cyhub {
 namespace {
 struct Version {
-    std::array<unsigned, 3> numbers{};
+    std::array<unsigned, 4> numbers{};
     std::string_view pre;
     std::string_view label;
 };
@@ -31,16 +32,19 @@ std::optional<Version> version(std::string_view tag) {
     Version v;
     v.label = text;
     text = text.substr(0, text.find('+'));
-    for (auto& number : v.numbers) {
-        const auto result = std::from_chars(text.data(), text.data() + text.size(), number);
-        if (result.ptr == text.data() || result.ec != std::errc{})
-            return {};
-        text.remove_prefix(static_cast<std::size_t>(result.ptr - text.data()));
-        if (&number != &v.numbers.back()) {
+    for (std::size_t part = 0; part < v.numbers.size(); ++part) {
+        if (part > 0) {
+            if (part == 3 && !text.starts_with('.'))
+                break;
             if (!text.starts_with('.'))
                 return {};
             text.remove_prefix(1);
         }
+        auto& number = v.numbers[part];
+        const auto result = std::from_chars(text.data(), text.data() + text.size(), number);
+        if (result.ptr == text.data() || result.ec != std::errc{})
+            return {};
+        text.remove_prefix(static_cast<std::size_t>(result.ptr - text.data()));
     }
     if (!text.empty()) {
         if (!text.starts_with('-') || text.size() == 1)
@@ -151,7 +155,7 @@ std::optional<Release> latest_release(const Project& project, const Cancellation
         return std::nullopt;
     cymcp::HttpRequest request;
     request.url = "https://api.github.com/repos/" + project.repo +
-        (project.include_prerelease ? "/releases?per_page=1" : "/releases/latest");
+        (project.include_prerelease ? "/releases?per_page=10" : "/releases/latest");
     request.headers["Accept"] = "application/vnd.github+json";
     if (!github_token.empty())
         request.headers["Authorization"] = "Bearer " + std::string(github_token);
@@ -167,9 +171,40 @@ std::optional<Release> latest_release(const Project& project, const Cancellation
     if (response.status != 200)
         throw std::runtime_error("GitHub returned HTTP " + std::to_string(response.status) + ".");
     const auto data = cymcp::parse_json(response.body);
-    if (project.include_prerelease)
-        return data.empty() ? std::nullopt : parse_release(project, data.at(0));
+    if (project.include_prerelease) {
+        for (const auto& entry : data)
+            if (auto release = parse_release(project, entry))
+                return release;
+        return std::nullopt;
+    }
     return parse_release(project, data);
+}
+
+std::string github_project_token(const Project& project) {
+    const auto* value = std::getenv("GH_TOKEN");
+    if (!value || !project.repo.starts_with("MrMybal/"))
+        return {};
+    const std::string_view token(value);
+    if (token.size() > 4096 || !std::ranges::all_of(token, [](char c) {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                   (c >= '0' && c <= '9') || c == '_' || c == '-';
+        }))
+        return {};
+    return std::string(token);
+}
+
+std::optional<Release> discover_release(const Project& project, const Cancellation& cancel) {
+    const auto token = github_project_token(project);
+    if (is_companion(project))
+        return latest_release(project, cancel, token);
+    auto release = latest_release(project, cancel);
+    if (!release && !token.empty() && !cancel.cancelled()) {
+        release = latest_release(project, cancel, token);
+        // The elevated update service uses public package URLs.
+        if (release)
+            release->asset.reset();
+    }
+    return release;
 }
 
 cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cancel,

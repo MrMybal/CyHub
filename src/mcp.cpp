@@ -1,5 +1,6 @@
 #include "hub.hpp"
 #include "companion.hpp"
+#include "installed_apps.hpp"
 
 #include <cymcp/mcp.hpp>
 #include <iostream>
@@ -13,31 +14,38 @@ int main() {
         const auto local_companions = companion_root();
         cymcp::Registry operations(cymcp::Policy::allow_all());
         const Json output_schema = {{"type", "object"}};
-        const auto describe = [&](const Project& project) {
+        const auto describe = [&](const Project& project, const InstallationInventory& inventory) {
             const auto installed = installed_version(is_companion(project) ? local_companions : root, project);
+            const auto detected = inventory.find(project.id);
+            const auto version = installed ? installed->version :
+                detected != inventory.end() ? detected->second.version : "";
             return Json{{"id", project.id}, {"name", project.name}, {"category", project.category},
                         {"description", project.description}, {"repository", project.url()},
                         {"windowsManagedPackage", project.windows_x64.has_value()},
                         {"skill", project.skill.empty() ? Json(nullptr) : Json(project.skill)},
-                        {"installedVersion", installed ? Json(installed->version) : Json(nullptr)}};
+                        {"installed", installed.has_value() || detected != inventory.end()},
+                        {"installationSource", installed ? Json("cyhub") :
+                            detected != inventory.end() ? Json("windows") : Json(nullptr)},
+                        {"installedVersion", version.empty() ? Json(nullptr) : Json(version)}};
         };
 
         operations.add({
-            "list_projects", "List CyHub projects and their managed installed versions.",
+            "list_projects", "List CyHub projects, detected installations and installed versions.",
             {{"type", "object"}, {"additionalProperties", false},
              {"properties", {{"query", {{"type", "string"}, {"maxLength", 120}}}}}},
             output_schema, true,
-            [&](const Json& args, const cymcp::CallContext&) {
+            [&](const Json& args, const cymcp::CallContext& ctx) {
+                const auto inventory = detect_installations(catalog, ctx.cancellation);
                 auto projects = Json::array();
                 for (const auto& project : catalog) {
                     if (matches(project, args.value("query", "")))
-                        projects.push_back(describe(project));
+                        projects.push_back(describe(project, inventory));
                 }
                 return Json{{"projects", projects}};
             }});
 
         operations.add({
-            "check_project_update", "Read the latest GitHub release and compare it with CyHub's installed version.",
+            "check_project_update", "Compare the latest accessible GitHub release with the installed version.",
             {{"type", "object"}, {"additionalProperties", false}, {"required", {"id"}},
              {"properties", {{"id", {{"type", "string"}, {"maxLength", 80}}}}}},
             output_schema, true,
@@ -45,13 +53,17 @@ int main() {
                 const auto* project = find_project(catalog, args.at("id").get<std::string>());
                 if (!project)
                     throw cymcp::Error("NotFound", "Unknown project ID");
-                const auto release = latest_release(*project, ctx.cancellation);
-                const auto installed = installed_version(is_companion(*project) ? local_companions : root, *project);
-                return Json{{"project", describe(*project)},
+                const auto inventory = detect_installations({*project}, ctx.cancellation);
+                auto info = describe(*project, inventory);
+                const auto& installed = info.at("installedVersion");
+                const auto release = discover_release(*project, ctx.cancellation);
+                const bool update = release && installed.is_string() &&
+                    newer_version(installed.get_ref<const std::string&>(), release->tag);
+                return Json{{"project", std::move(info)},
                             {"latestVersion", release ? Json(release->tag) : Json(nullptr)},
                             {"releaseUrl", release ? Json(release->url) : Json(nullptr)},
                             {"managedAssetAvailable", release && release->asset.has_value()},
-                            {"updateAvailable", release && installed && newer_version(installed->version, release->tag)}};
+                            {"updateAvailable", update}};
             }});
 
         operations.add({

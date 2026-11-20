@@ -1,13 +1,15 @@
-# CyHub 0.2.0
+# CyHub 0.3.0
 
 [Français](VERSION.fr.md) · [README](README.md)
 
 **Status:** In development.
 
-[Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.2.0)
+[Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.3.0)
 
 ## Included
 
+- Automatic Windows installation detection at startup, with an Installed apps view and GitHub update checks for known installed versions.
+- Installed status, version and source in the MCP catalog.
 - Recommended CyMCPHub card with direct offline installation of version 0.3.0, per-user updates and an MCP bridge for the bundled skills.
 
 - Searchable CyUI catalog for applications, libraries, SDKs and extensions.
@@ -20,5 +22,6 @@
 ## Current limitations
 
 - Managed installs cover selected Windows x64 packages and installations created by CyHub.
-- Release checks use the rate-limited public GitHub API. Projects with other package formats link to their release.
+- Windows discovery covers registered apps, Start menu and desktop shortcuts, and common application folders. Portable apps stored elsewhere need a matching shortcut or registration to appear.
+- Release checks follow GitHub API limits. Private repositories require an existing `GH_TOKEN` with release access. Externally installed apps link to the publisher's release for updates.
 - The desktop code shares its SDL3 and MCP components across platforms. Linux and macOS builds, packaging and updater integration are pending.

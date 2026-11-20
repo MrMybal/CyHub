@@ -5,7 +5,7 @@ description: Connect CyHub to an AI client and read a project guide.
 section: CyHub
 parent: overview
 order: 4
-revision: 3
+revision: 4
 ---
 
 ## Connect an MCP client {#connect}
@@ -14,8 +14,8 @@ Set the client's stdio command to the absolute path of `CyHubMCP.exe` in your Cy
 
 | Tool | Result |
 | --- | --- |
-| `list_projects` | Projects, categories, managed installed versions and skill IDs. |
-| `check_project_update` | Latest GitHub release and comparison with the version managed by CyHub. |
+| `list_projects` | Projects, categories, detected installations, known versions and skill IDs. |
+| `check_project_update` | Latest accessible GitHub release and comparison with the local version, when known. |
 | `list_project_skills` | Project IDs with a bundled guide. |
 | `get_project_skill` | The selected project's Markdown guide. |
 

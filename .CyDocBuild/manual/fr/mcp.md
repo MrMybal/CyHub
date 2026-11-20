@@ -5,7 +5,7 @@ description: Connecter un client IA à CyHub et lire les guides des projets.
 section: CyHub
 parent: overview
 order: 4
-sourceRevision: 3
+sourceRevision: 4
 ---
 
 ## Connecter un client MCP {#connect}
@@ -14,8 +14,8 @@ Configure le chemin absolu de `CyHubMCP.exe` comme commande stdio dans ton clien
 
 | Outil | Résultat |
 | --- | --- |
-| `list_projects` | Projets, catégories, versions gérées installées et identifiants des skills. |
-| `check_project_update` | Dernière publication GitHub et comparaison avec la version gérée par CyHub. |
+| `list_projects` | Projets, catégories, installations détectées, versions connues et identifiants des skills. |
+| `check_project_update` | Dernière publication GitHub accessible et comparaison avec la version locale si elle est connue. |
 | `list_project_skills` | Identifiants des projets ayant un guide. |
 | `get_project_skill` | Guide Markdown du projet sélectionné. |
 

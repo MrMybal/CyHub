@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hub.hpp"
+#include "installed_apps.hpp"
 #include <array>
 #include <deque>
 #include <future>
@@ -18,22 +18,31 @@ public:
     void render();
 
 private:
+    enum class View { all, installed, updates, skills, category };
     struct Status {
         std::optional<Installed> installed;
+        std::optional<DetectedInstallation> detected;
         Job job;
         std::optional<Release> release;
+        std::optional<Release> bundle;
         bool checked = false;
-        bool remote_package = false;
         std::string error;
+
+        bool present() const;
+        std::string_view installed_tag() const;
+        const Release* available_release() const;
+        bool update_available() const;
+        bool can_install() const;
     };
     struct Check {
         std::string id;
         std::optional<Release> release;
         std::string error;
-        bool remote_package = false;
     };
 
     void refresh_state();
+    void scan_installations(bool check_catalog = false);
+    void collect_inventory();
     void check_projects(std::vector<Project> projects);
     void collect_checks();
     void sidebar();
@@ -47,18 +56,15 @@ private:
     void queue_install(const Project& project, const Release& release);
     void open_project(const Project& project, const Installed& installed);
     bool visible(const Project& project) const;
-    bool ready(const Status& status) const;
 
     Catalog catalog_;
     fs::path root_, preferences_, companions_;
-    std::optional<Release> companion_bundle_;
     std::map<std::string, std::unique_ptr<SDL_Texture, void (*)(SDL_Texture*)>> icons_;
     std::map<std::string, Status> status_;
     std::vector<std::string> categories_;
     std::string category_, selected_;
     std::array<char, 160> search_{};
-    bool updates_only_ = false;
-    bool skills_only_ = false;
+    View view_ = View::all;
     bool service_running_ = false;
     std::string state_error_;
     std::string skill_text_;
@@ -69,6 +75,8 @@ private:
     Cancellation cancel_;
     std::atomic_bool checking_{false};
     std::jthread worker_;
+    std::future<InstallationInventory> inventory_;
+    bool check_catalog_ = false;
     std::future<void> queued_;
     bool queued_companion_ = false;
 };
