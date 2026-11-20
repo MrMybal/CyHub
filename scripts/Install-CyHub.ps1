@@ -31,7 +31,7 @@ if ($PSScriptRoot -ine $root) {
     foreach ($file in $files) {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination $root -Force
     }
-    foreach ($optional in @('skills', 'assets', 'Documentation', 'licenses', 'README.md', 'README.fr.md', 'VERSION.md', 'VERSION.fr.md', 'Install-CyHub.ps1', 'Uninstall-CyHubService.ps1')) {
+    foreach ($optional in @('skills', 'assets', 'Documentation', 'licenses', 'LICENSE', 'README.md', 'README.fr.md', 'VERSION.md', 'VERSION.fr.md', 'Install-CyHub.ps1', 'Uninstall-CyHubService.ps1')) {
         $source = Join-Path $PSScriptRoot $optional
         if (Test-Path -LiteralPath $source) {
             Copy-Item -LiteralPath $source -Destination $root -Recurse -Force

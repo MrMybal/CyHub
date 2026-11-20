@@ -91,7 +91,7 @@ foreach(target IN LISTS hub_targets)
 endforeach()
 
 install(TARGETS ${hub_targets} RUNTIME DESTINATION . COMPONENT CyHub)
-install(FILES catalog.json README.md README.fr.md VERSION.md VERSION.fr.md DESTINATION . COMPONENT CyHub)
+install(FILES LICENSE catalog.json README.md README.fr.md VERSION.md VERSION.fr.md DESTINATION . COMPONENT CyHub)
 install(DIRECTORY skills/ DESTINATION skills COMPONENT CyHub FILES_MATCHING PATTERN "SKILL.md")
 install(DIRECTORY assets/icons/ DESTINATION assets/icons COMPONENT CyHub)
 install(DIRECTORY Documentation/ DESTINATION Documentation COMPONENT CyHub)

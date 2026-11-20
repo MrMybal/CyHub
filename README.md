@@ -8,7 +8,7 @@
     </td>
     <td width="400" align="center" valign="middle"><strong>CyHub</strong></td>
     <td width="300" align="right" valign="top">
-      <p><a href="#licenses">Component licenses</a></p>
+      <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
       <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.1.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
       <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.1.0"><strong>Windows x64 preview</strong></a></p>
     </td>
@@ -60,6 +60,8 @@ You can also build with Ninja from **x64 Native Tools for VS 2022**. Configure w
 ---
 
 ## Licenses
+
+CyHub is licensed under the [GNU General Public License version 3](LICENSE) (`GPL-3.0-only`).
 
 Bundled components retain their licenses. The package includes their notices in `licenses/`, and the CyDoc reader includes its notice in `Documentation/DocData/`.
 

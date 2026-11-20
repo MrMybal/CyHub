@@ -8,7 +8,7 @@
     </td>
     <td width="400" align="center" valign="middle"><strong>CyHub</strong></td>
     <td width="300" align="right" valign="top">
-      <p><a href="#licences">Licences des composants</a></p>
+      <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
       <p><sub>Version</sub><br><a href="VERSION.fr.md"><strong>0.1.0</strong></a><br><strong>EN DÉVELOPPEMENT</strong></p>
       <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.1.0"><strong>Préversion Windows x64</strong></a></p>
     </td>
@@ -60,6 +60,8 @@ Le même projet peut être compilé avec Ninja depuis **x64 Native Tools for VS 
 ---
 
 ## Licences
+
+CyHub est sous [licence publique générale GNU version 3](LICENSE) (`GPL-3.0-only`).
 
 Les composants intégrés conservent leurs licences. Le paquet distribue les notices dans `licenses/`, et le lecteur CyDoc fournit la sienne dans `Documentation/DocData/`.
 

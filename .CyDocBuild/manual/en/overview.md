@@ -4,7 +4,7 @@ title: CyHub
 description: Browse projects, check releases and find MCP guides.
 section: CyHub
 order: 0
-revision: 2
+revision: 3
 ---
 
 CyHub brings applications, libraries, SDKs and extensions into a searchable desktop catalog. Use the sidebar to move between project categories, updates and MCP skills.
@@ -27,3 +27,7 @@ The sidebar filters the catalog. The middle column lists projects with their des
 CyHub starts in English. Use **Language** in the sidebar to switch to French. Your preference is saved for the next launch.
 
 Open this manual with **Help** or **F1**. It opens in the selected language.
+
+## License {#license}
+
+CyHub is licensed under GNU GPL version 3 (`GPL-3.0-only`) and is provided without warranty under that license. The Windows package includes the license in the `LICENSE` file beside `CyHub.exe`. Notices for bundled components are in `licenses/` and `Documentation/DocData/`.
