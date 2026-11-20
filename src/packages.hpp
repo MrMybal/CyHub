@@ -1,0 +1,12 @@
+#pragma once
+
+#include "hub.hpp"
+
+namespace cyhub {
+void set_job(const fs::path& root, const Project& project, std::string_view phase, std::string_view detail = {});
+void extract_archive(const fs::path& archive, const fs::path& directory, const Cancellation& cancel);
+void activate_archive(const fs::path& root, const Project& project, const Release& release,
+                      const fs::path& archive, const Cancellation& cancel);
+void install_release(const fs::path& root, const Project& project, std::string_view tag,
+                     const Cancellation& cancel);
+}

@@ -1,0 +1,22 @@
+{
+  "name": "CyHub",
+  "version": "0.1.0",
+  "defaultLocale": "en",
+  "locales": [
+    {
+      "code": "en",
+      "label": "English"
+    },
+    {
+      "code": "fr",
+      "label": "Français"
+    }
+  ],
+  "homePage": "overview",
+  "content": "manual",
+  "assets": "../assets/screenshots",
+  "out": "../Documentation",
+  "modules": [
+    "image"
+  ]
+}

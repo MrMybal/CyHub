@@ -1,0 +1,12 @@
+/build/
+/dist/
+/out/
+/.vs/
+CMakeUserPresets.json
+node_modules/
+.env
+.env.*
+*.local
+*.log
+*.user
+__pycache__/

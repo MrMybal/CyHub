@@ -1,0 +1,348 @@
+{
+  "schemaVersion": 1,
+  "name": "CyHub",
+  "version": "0.1.0",
+  "defaultLocale": "en",
+  "locales": [
+    {
+      "code": "en",
+      "label": "English"
+    },
+    {
+      "code": "fr",
+      "label": "Français"
+    }
+  ],
+  "aliases": {},
+  "pages": [
+    {
+      "id": "catalog",
+      "title": "Catalog",
+      "description": "Find projects by name, description, or category and add your own entries.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 2,
+      "revision": "1",
+      "locale": "en",
+      "html": "<h2 id=\"search\">Find a project<a class=\"heading-anchor\" href=\"#/en/catalog/search\" aria-label=\"Link to Find a project\">#</a></h2><p>Choose <strong>Tous les projets</strong> or a category. Search by name, description or repository. The search matches accented words even if you type them without accents. Select a row for the project description, versions and GitHub link.</p>\n<p>Choose <strong>Skills MCP</strong> to see projects with an integration guide. Each guide can be opened or copied from the project panel. See <a href=\"#/en/mcp\">MCP and skills</a>.</p>\n<h2 id=\"customize\">Add a project<a class=\"heading-anchor\" href=\"#/en/catalog/customize\" aria-label=\"Link to Add a project\">#</a></h2><p>Edit <code>catalog.json</code> in the package with the app closed. Use a stable lowercase <code>id</code>, a <code>name</code>, a <code>category</code> and a <code>description</code>. If available, set <code>repo</code> to the GitHub owner and repository separated by a slash. To associate an icon, place a PNG named after the project ID in <code>assets/icons</code>. To associate a guide, set <code>skill</code> to its folder name under <code>skills</code>.</p>\n<p>For a managed Windows x64 package, use <code>windowsX64.asset</code> for the release asset name and <code>windowsX64.entry</code> for the executable path inside the ZIP or the local name of a portable EXE or wheel. The variable <code>{version}</code> expands from the release tag. Set <code>includePrerelease</code> to <code>true</code> if the project tracks prereleases.</p>\n<p>To update the catalog used by the Windows service, run the installer again from the package with the modified catalog.</p>\n",
+      "text": "Find a project # Choose Tous les projets or a category. Search by name, description or repository. The search matches accented words even if you type them without accents. Select a row for the project description, versions and GitHub link. Choose Skills MCP to see projects with an integration guide. Each guide can be opened or copied from the project panel. See MCP and skills . Add a project # Edit catalog.json in the package with the app closed. Use a stable lowercase id , a name , a category and a description . If available, set repo to the GitHub owner and repository separated by a slash. To associate an icon, place a PNG named after the project ID in assets/icons . To associate a guide, set skill to its folder name under skills . For a managed Windows x64 package, use windowsX64.asset for the release asset name and windowsX64.entry for the executable path inside the ZIP or the local name of a portable EXE or wheel. The variable {version} expands from the release tag. Set includePrerelease to true if the project tracks prereleases. To update the catalog used by the Windows service, run the installer again from the package with the modified catalog.",
+      "headings": [
+        {
+          "id": "search",
+          "text": "Find a project",
+          "level": 2
+        },
+        {
+          "id": "customize",
+          "text": "Add a project",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [
+        "#/en/mcp"
+      ],
+      "kind": "guide"
+    },
+    {
+      "id": "installation",
+      "title": "Installation",
+      "description": "Start the Windows desktop app and enable the update service.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 1,
+      "revision": "1",
+      "locale": "en",
+      "html": "<h2 id=\"launch\">Launch CyHub<a class=\"heading-anchor\" href=\"#/en/installation/launch\" aria-label=\"Link to Launch CyHub\">#</a></h2><ol>\n<li>Extract the complete Windows x64 package into a folder.</li>\n<li>Open <code>CyHub.exe</code>. Keep the catalog, icons, skills and <code>Documentation</code> beside the executable.</li>\n<li>Select a project and choose <strong>Vérifier sur GitHub</strong> to see its latest release.</li>\n</ol>\n<p>The app uses the Microsoft Visual C++ x64 runtime. The portable catalog, skills and manual are available from the extracted folder.</p>\n<h2 id=\"service\">Enable managed updates<a class=\"heading-anchor\" href=\"#/en/installation/service\" aria-label=\"Link to Enable managed updates\">#</a></h2><p>Close CyHub before installation. From a PowerShell x64 window running as administrator, run <code>Install-CyHub.ps1</code> from the extracted package. Then open <code>%ProgramFiles%\\CyHub\\CyHub.exe</code>.</p>\n<p>The sidebar shows <strong>Service actif</strong> when CyHub Updater is running. The update service uses the Windows LocalService account. It continues a requested update after the app window closes.</p>\n<p>Run <code>Uninstall-CyHubService.ps1</code> as administrator to remove the service. The app, catalog and managed versions stay in Program Files.</p>\n",
+      "text": "Launch CyHub # Extract the complete Windows x64 package into a folder. Open CyHub.exe . Keep the catalog, icons, skills and Documentation beside the executable. Select a project and choose Vérifier sur GitHub to see its latest release. The app uses the Microsoft Visual C++ x64 runtime. The portable catalog, skills and manual are available from the extracted folder. Enable managed updates # Close CyHub before installation. From a PowerShell x64 window running as administrator, run Install-CyHub.ps1 from the extracted package. Then open %ProgramFiles%\\CyHub\\CyHub.exe . The sidebar shows Service actif when CyHub Updater is running. The update service uses the Windows LocalService account. It continues a requested update after the app window closes. Run Uninstall-CyHubService.ps1 as administrator to remove the service. The app, catalog and managed versions stay in Program Files.",
+      "headings": [
+        {
+          "id": "launch",
+          "text": "Launch CyHub",
+          "level": 2
+        },
+        {
+          "id": "service",
+          "text": "Enable managed updates",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [],
+      "kind": "guide"
+    },
+    {
+      "id": "mcp",
+      "title": "MCP and skills",
+      "description": "Connect CyHub to an AI client and read a project guide.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 4,
+      "revision": "1",
+      "locale": "en",
+      "html": "<h2 id=\"connect\">Connect an MCP client<a class=\"heading-anchor\" href=\"#/en/mcp/connect\" aria-label=\"Link to Connect an MCP client\">#</a></h2><p>Set the client&#39;s stdio command to the absolute path of <code>CyHubMCP.exe</code> in your CyHub package. The server uses <a href=\"https://github.com/MrMybal/CyMCPSDK\" target=\"_blank\" rel=\"noopener noreferrer\">CyMCPSDK</a>. Choose a client that supports MCP protocol 2025-11-25 or 2025-06-18.</p>\n<table>\n<thead>\n<tr>\n<th>Tool</th>\n<th>Result</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>list_projects</code></td>\n<td>Projects, categories, managed installed versions and skill IDs.</td>\n</tr>\n<tr>\n<td><code>check_project_update</code></td>\n<td>Latest GitHub release and comparison with the version managed by CyHub.</td>\n</tr>\n<tr>\n<td><code>list_project_skills</code></td>\n<td>Project IDs with a bundled guide.</td>\n</tr>\n<tr>\n<td><code>get_project_skill</code></td>\n<td>The selected project&#39;s Markdown guide.</td>\n</tr>\n</tbody></table>\n<p>Use an ID returned by the list methods to request an update check or a skill. The four tools are read-only.</p>\n<h2 id=\"skills\">Use a project skill<a class=\"heading-anchor\" href=\"#/en/mcp/skills\" aria-label=\"Link to Use a project skill\">#</a></h2><p>Choose <strong>Skills MCP</strong>, select a project, and click <strong>Lire le skill</strong>. Copy the Markdown or open the corresponding <code>skills/&lt;name&gt;/SKILL.md</code> file from the package. Each guide describes how to find and connect to that project&#39;s own tools.</p>\n",
+      "text": "Connect an MCP client # Set the client's stdio command to the absolute path of CyHubMCP.exe in your CyHub package. The server uses CyMCPSDK . Choose a client that supports MCP protocol 2025-11-25 or 2025-06-18. Tool Result list_projects Projects, categories, managed installed versions and skill IDs. check_project_update Latest GitHub release and comparison with the version managed by CyHub. list_project_skills Project IDs with a bundled guide. get_project_skill The selected project's Markdown guide. Use an ID returned by the list methods to request an update check or a skill. The four tools are read-only. Use a project skill # Choose Skills MCP , select a project, and click Lire le skill . Copy the Markdown or open the corresponding skills/<name>/SKILL.md file from the package. Each guide describes how to find and connect to that project's own tools.",
+      "headings": [
+        {
+          "id": "connect",
+          "text": "Connect an MCP client",
+          "level": 2
+        },
+        {
+          "id": "skills",
+          "text": "Use a project skill",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [
+        "https://github.com/MrMybal/CyMCPSDK"
+      ],
+      "kind": "guide"
+    },
+    {
+      "id": "overview",
+      "title": "CyHub",
+      "description": "Browse projects, check releases and find MCP guides.",
+      "section": "CyHub",
+      "order": 0,
+      "revision": "1",
+      "locale": "en",
+      "html": "<p>CyHub brings applications, libraries, SDKs and extensions into a searchable desktop catalog. Use the sidebar to move between project categories, updates and MCP skills.</p>\n<h2 id=\"start\">Start here<a class=\"heading-anchor\" href=\"#/en/overview/start\" aria-label=\"Link to Start here\">#</a></h2><ul>\n<li><a href=\"#/en/installation/launch\">Launch CyHub and enable managed updates</a>.</li>\n<li><a href=\"#/en/catalog/search\">Find a project and check its GitHub release</a>.</li>\n<li><a href=\"#/en/updates/install\">Install, update and open a managed project</a>.</li>\n<li><a href=\"#/en/mcp/connect\">Connect an AI client and find a project skill</a>.</li>\n</ul>\n<h2 id=\"workspace\">The workspace<a class=\"heading-anchor\" href=\"#/en/overview/workspace\" aria-label=\"Link to The workspace\">#</a></h2><p>The sidebar filters the catalog. The middle column lists projects with their descriptions and icons. Select a row to see versions, available actions and the project&#39;s MCP guide.</p>\n<figure data-cydoc-module=\"image\" data-cydoc-id=\"catalog\" data-config=\"{&quot;id&quot;:&quot;catalog&quot;,&quot;src&quot;:&quot;assets/catalogue.png&quot;,&quot;alt&quot;:&quot;CyHub with the project list, project icons, and details panel&quot;,&quot;controls&quot;:&quot;minimal&quot;}\"><img src=\"assets/catalogue.png\" alt=\"CyHub with the project list, project icons, and details panel\" loading=\"lazy\" decoding=\"async\"></figure><p>Open this manual from <strong>Aide</strong> in CyHub or press <strong>F1</strong>.</p>\n",
+      "text": "CyHub brings applications, libraries, SDKs and extensions into a searchable desktop catalog. Use the sidebar to move between project categories, updates and MCP skills. Start here # Launch CyHub and enable managed updates . Find a project and check its GitHub release . Install, update and open a managed project . Connect an AI client and find a project skill . The workspace # The sidebar filters the catalog. The middle column lists projects with their descriptions and icons. Select a row to see versions, available actions and the project's MCP guide. Open this manual from Aide in CyHub or press F1 .",
+      "headings": [
+        {
+          "id": "start",
+          "text": "Start here",
+          "level": 2
+        },
+        {
+          "id": "workspace",
+          "text": "The workspace",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [
+        "assets/catalogue.png"
+      ],
+      "links": [
+        "#/en/installation/launch",
+        "#/en/catalog/search",
+        "#/en/updates/install",
+        "#/en/mcp/connect"
+      ],
+      "kind": "media"
+    },
+    {
+      "id": "updates",
+      "title": "Updates",
+      "description": "Check GitHub releases and install verified Windows packages.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 3,
+      "revision": "1",
+      "locale": "en",
+      "html": "<h2 id=\"check\">Check releases<a class=\"heading-anchor\" href=\"#/en/updates/check\" aria-label=\"Link to Check releases\">#</a></h2><p>Choose <strong>Vérifier sur GitHub</strong> for a selected project or <strong>Tout vérifier</strong> for the catalog. <strong>Mises à jour</strong> lists managed installations with a newer release. Projects without a matching package still show the release link when one exists. Release checks use the public GitHub API and are subject to its rate limit.</p>\n<h2 id=\"install\">Install or update<a class=\"heading-anchor\" href=\"#/en/updates/install\" aria-label=\"Link to Install or update\">#</a></h2><ol>\n<li>Enable <a href=\"#/en/installation/service\">CyHub Updater</a>.</li>\n<li>Select a project, check its release, then click <strong>Installer</strong> or <strong>Mettre à jour</strong>.</li>\n<li>Let the service download and verify the package. Use <strong>Ouvrir l’application</strong> when the installation is ready. A managed library wheel offers <strong>Ouvrir le dossier</strong>.</li>\n</ol>\n<p>CyHub verifies the published SHA-256 and prepares the next version before making it active. Existing managed versions stay in <code>%ProgramFiles%\\CyHub\\Managed</code>. Applications open under your Windows account. CyHub manages only the installations it creates.</p>\n",
+      "text": "Check releases # Choose Vérifier sur GitHub for a selected project or Tout vérifier for the catalog. Mises à jour lists managed installations with a newer release. Projects without a matching package still show the release link when one exists. Release checks use the public GitHub API and are subject to its rate limit. Install or update # Enable CyHub Updater . Select a project, check its release, then click Installer or Mettre à jour . Let the service download and verify the package. Use Ouvrir l’application when the installation is ready. A managed library wheel offers Ouvrir le dossier . CyHub verifies the published SHA-256 and prepares the next version before making it active. Existing managed versions stay in %ProgramFiles%\\CyHub\\Managed . Applications open under your Windows account. CyHub manages only the installations it creates.",
+      "headings": [
+        {
+          "id": "check",
+          "text": "Check releases",
+          "level": 2
+        },
+        {
+          "id": "install",
+          "text": "Install or update",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [
+        "#/en/installation/service"
+      ],
+      "kind": "guide"
+    },
+    {
+      "id": "catalog",
+      "title": "Catalogue",
+      "description": "Rechercher par nom, description ou catégorie et ajouter des projets.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 2,
+      "sourceRevision": "1",
+      "locale": "fr",
+      "html": "<h2 id=\"search\">Trouver un projet<a class=\"heading-anchor\" href=\"#/fr/catalog/search\" aria-label=\"Lien vers Trouver un projet\">#</a></h2><p>Sélectionne <strong>Tous les projets</strong> ou une catégorie. Recherche un nom, une description ou un dépôt. Tu peux saisir des mots accentués sans leurs accents. Ouvre la fiche d’un projet pour lire sa description, comparer ses versions et accéder à GitHub.</p>\n<p>Choisis <strong>Skills MCP</strong> pour afficher les projets qui proposent un guide d’intégration. La fiche du projet permet de lire et de copier son guide. Voir <a href=\"#/fr/mcp\">MCP et skills</a>.</p>\n<h2 id=\"customize\">Ajouter un projet<a class=\"heading-anchor\" href=\"#/fr/catalog/customize\" aria-label=\"Lien vers Ajouter un projet\">#</a></h2><p>Ferme l’application et modifie <code>catalog.json</code> dans le paquet. Renseigne un <code>id</code> stable en minuscules, un <code>name</code>, une <code>category</code> et une <code>description</code>. Pour GitHub, le champ <code>repo</code> prend la forme <code>propriétaire/dépôt</code>. Pour associer une icône, place un PNG nommé d’après l’identifiant du projet dans <code>assets/icons</code>. Pour associer un guide, renseigne <code>skill</code> avec son nom de dossier sous <code>skills</code>.</p>\n<p>Pour un paquet Windows x64 géré, <code>windowsX64.asset</code> donne le nom du fichier publié. <code>windowsX64.entry</code> désigne le chemin de l’exécutable dans le ZIP ou le nom local de l’EXE portable ou du wheel. <code>{version}</code> est remplacé par la version tirée du tag. Active <code>includePrerelease</code> pour suivre les préversions.</p>\n<p>Pour actualiser le catalogue utilisé par le service Windows, relance le script d’installation depuis le paquet contenant le catalogue modifié.</p>\n",
+      "text": "Trouver un projet # Sélectionne Tous les projets ou une catégorie. Recherche un nom, une description ou un dépôt. Tu peux saisir des mots accentués sans leurs accents. Ouvre la fiche d’un projet pour lire sa description, comparer ses versions et accéder à GitHub. Choisis Skills MCP pour afficher les projets qui proposent un guide d’intégration. La fiche du projet permet de lire et de copier son guide. Voir MCP et skills . Ajouter un projet # Ferme l’application et modifie catalog.json dans le paquet. Renseigne un id stable en minuscules, un name , une category et une description . Pour GitHub, le champ repo prend la forme propriétaire/dépôt . Pour associer une icône, place un PNG nommé d’après l’identifiant du projet dans assets/icons . Pour associer un guide, renseigne skill avec son nom de dossier sous skills . Pour un paquet Windows x64 géré, windowsX64.asset donne le nom du fichier publié. windowsX64.entry désigne le chemin de l’exécutable dans le ZIP ou le nom local de l’EXE portable ou du wheel. {version} est remplacé par la version tirée du tag. Active includePrerelease pour suivre les préversions. Pour actualiser le catalogue utilisé par le service Windows, relance le script d’installation depuis le paquet contenant le catalogue modifié.",
+      "headings": [
+        {
+          "id": "search",
+          "text": "Trouver un projet",
+          "level": 2
+        },
+        {
+          "id": "customize",
+          "text": "Ajouter un projet",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [
+        "#/fr/mcp"
+      ],
+      "kind": "guide",
+      "revision": "04b11281891c"
+    },
+    {
+      "id": "installation",
+      "title": "Installation",
+      "description": "Démarrer l’application Windows et activer le service de mise à jour.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 1,
+      "sourceRevision": "1",
+      "locale": "fr",
+      "html": "<h2 id=\"launch\">Ouvrir CyHub<a class=\"heading-anchor\" href=\"#/fr/installation/launch\" aria-label=\"Lien vers Ouvrir CyHub\">#</a></h2><ol>\n<li>Extrais le paquet Windows x64 complet dans un dossier.</li>\n<li>Ouvre <code>CyHub.exe</code>. Garde le catalogue, les icônes, les skills et le dossier <code>Documentation</code> à côté de l’exécutable.</li>\n<li>Sélectionne un projet, puis clique sur <strong>Vérifier sur GitHub</strong> pour voir sa dernière publication.</li>\n</ol>\n<p>L’application utilise le runtime Microsoft Visual C++ x64. Le catalogue portable, les skills et le manuel sont disponibles dans le dossier extrait.</p>\n<h2 id=\"service\">Activer les mises à jour gérées<a class=\"heading-anchor\" href=\"#/fr/installation/service\" aria-label=\"Lien vers Activer les mises à jour gérées\">#</a></h2><p>Ferme CyHub avant l’installation. Ouvre PowerShell x64 en tant qu’administrateur et lance <code>Install-CyHub.ps1</code> depuis le paquet extrait. Ouvre ensuite <code>%ProgramFiles%\\CyHub\\CyHub.exe</code>.</p>\n<p>La barre latérale affiche <strong>Service actif</strong> quand CyHub Updater tourne. Le service utilise le compte Windows LocalService et poursuit une mise à jour demandée après la fermeture de la fenêtre.</p>\n<p>Lance <code>Uninstall-CyHubService.ps1</code> en administrateur pour retirer le service. L’application, le catalogue et les versions gérées restent dans Program Files.</p>\n",
+      "text": "Ouvrir CyHub # Extrais le paquet Windows x64 complet dans un dossier. Ouvre CyHub.exe . Garde le catalogue, les icônes, les skills et le dossier Documentation à côté de l’exécutable. Sélectionne un projet, puis clique sur Vérifier sur GitHub pour voir sa dernière publication. L’application utilise le runtime Microsoft Visual C++ x64. Le catalogue portable, les skills et le manuel sont disponibles dans le dossier extrait. Activer les mises à jour gérées # Ferme CyHub avant l’installation. Ouvre PowerShell x64 en tant qu’administrateur et lance Install-CyHub.ps1 depuis le paquet extrait. Ouvre ensuite %ProgramFiles%\\CyHub\\CyHub.exe . La barre latérale affiche Service actif quand CyHub Updater tourne. Le service utilise le compte Windows LocalService et poursuit une mise à jour demandée après la fermeture de la fenêtre. Lance Uninstall-CyHubService.ps1 en administrateur pour retirer le service. L’application, le catalogue et les versions gérées restent dans Program Files.",
+      "headings": [
+        {
+          "id": "launch",
+          "text": "Ouvrir CyHub",
+          "level": 2
+        },
+        {
+          "id": "service",
+          "text": "Activer les mises à jour gérées",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [],
+      "kind": "guide",
+      "revision": "da6b58a3c223"
+    },
+    {
+      "id": "mcp",
+      "title": "MCP et skills",
+      "description": "Connecter un client IA à CyHub et lire les guides des projets.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 4,
+      "sourceRevision": "1",
+      "locale": "fr",
+      "html": "<h2 id=\"connect\">Connecter un client MCP<a class=\"heading-anchor\" href=\"#/fr/mcp/connect\" aria-label=\"Lien vers Connecter un client MCP\">#</a></h2><p>Configure le chemin absolu de <code>CyHubMCP.exe</code> comme commande stdio dans ton client. Le serveur utilise <a href=\"https://github.com/MrMybal/CyMCPSDK\" target=\"_blank\" rel=\"noopener noreferrer\">CyMCPSDK</a>. Choisis un client compatible avec le protocole MCP 2025-11-25 ou 2025-06-18.</p>\n<table>\n<thead>\n<tr>\n<th>Outil</th>\n<th>Résultat</th>\n</tr>\n</thead>\n<tbody><tr>\n<td><code>list_projects</code></td>\n<td>Projets, catégories, versions gérées installées et identifiants des skills.</td>\n</tr>\n<tr>\n<td><code>check_project_update</code></td>\n<td>Dernière publication GitHub et comparaison avec la version gérée par CyHub.</td>\n</tr>\n<tr>\n<td><code>list_project_skills</code></td>\n<td>Identifiants des projets ayant un guide.</td>\n</tr>\n<tr>\n<td><code>get_project_skill</code></td>\n<td>Guide Markdown du projet sélectionné.</td>\n</tr>\n</tbody></table>\n<p>Utilise les identifiants renvoyés par les outils de liste pour vérifier une version ou lire un skill. Les quatre outils sont en lecture seule.</p>\n<h2 id=\"skills\">Utiliser le skill d’un projet<a class=\"heading-anchor\" href=\"#/fr/mcp/skills\" aria-label=\"Lien vers Utiliser le skill d’un projet\">#</a></h2><p>Choisis <strong>Skills MCP</strong>, sélectionne un projet et clique sur <strong>Lire le skill</strong>. Copie le Markdown ou ouvre le fichier <code>skills/&lt;nom&gt;/SKILL.md</code> correspondant dans le paquet. Chaque guide indique comment trouver les outils propres au projet et s’y connecter.</p>\n",
+      "text": "Connecter un client MCP # Configure le chemin absolu de CyHubMCP.exe comme commande stdio dans ton client. Le serveur utilise CyMCPSDK . Choisis un client compatible avec le protocole MCP 2025-11-25 ou 2025-06-18. Outil Résultat list_projects Projets, catégories, versions gérées installées et identifiants des skills. check_project_update Dernière publication GitHub et comparaison avec la version gérée par CyHub. list_project_skills Identifiants des projets ayant un guide. get_project_skill Guide Markdown du projet sélectionné. Utilise les identifiants renvoyés par les outils de liste pour vérifier une version ou lire un skill. Les quatre outils sont en lecture seule. Utiliser le skill d’un projet # Choisis Skills MCP , sélectionne un projet et clique sur Lire le skill . Copie le Markdown ou ouvre le fichier skills/<nom>/SKILL.md correspondant dans le paquet. Chaque guide indique comment trouver les outils propres au projet et s’y connecter.",
+      "headings": [
+        {
+          "id": "connect",
+          "text": "Connecter un client MCP",
+          "level": 2
+        },
+        {
+          "id": "skills",
+          "text": "Utiliser le skill d’un projet",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [
+        "https://github.com/MrMybal/CyMCPSDK"
+      ],
+      "kind": "guide",
+      "revision": "986cc8d7d55d"
+    },
+    {
+      "id": "overview",
+      "title": "CyHub",
+      "description": "Parcourir les projets, vérifier leurs versions et trouver les guides MCP.",
+      "section": "CyHub",
+      "order": 0,
+      "sourceRevision": "1",
+      "locale": "fr",
+      "html": "<p>CyHub rassemble les applications, bibliothèques, SDK et extensions dans un catalogue de bureau. Utilise la barre latérale pour passer des catégories aux mises à jour ou aux skills MCP.</p>\n<h2 id=\"start\">Premiers pas<a class=\"heading-anchor\" href=\"#/fr/overview/start\" aria-label=\"Lien vers Premiers pas\">#</a></h2><ul>\n<li><a href=\"#/fr/installation/launch\">Ouvrir CyHub et activer les mises à jour gérées</a>.</li>\n<li><a href=\"#/fr/catalog/search\">Retrouver un projet et vérifier sa publication GitHub</a>.</li>\n<li><a href=\"#/fr/updates/install\">Installer, mettre à jour et ouvrir un projet géré</a>.</li>\n<li><a href=\"#/fr/mcp/connect\">Connecter un client IA et trouver le skill d’un projet</a>.</li>\n</ul>\n<h2 id=\"workspace\">L’interface<a class=\"heading-anchor\" href=\"#/fr/overview/workspace\" aria-label=\"Lien vers L’interface\">#</a></h2><p>La barre latérale filtre le catalogue. La colonne centrale affiche les projets, leur description et leur icône. Sélectionne une ligne pour voir les versions, les actions disponibles et le guide MCP du projet.</p>\n<figure data-cydoc-module=\"image\" data-cydoc-id=\"catalog\" data-config=\"{&quot;id&quot;:&quot;catalog&quot;,&quot;src&quot;:&quot;assets/catalogue.png&quot;,&quot;alt&quot;:&quot;CyHub avec la liste des projets, leurs icônes et le panneau de détails&quot;,&quot;controls&quot;:&quot;minimal&quot;}\"><img src=\"assets/catalogue.png\" alt=\"CyHub avec la liste des projets, leurs icônes et le panneau de détails\" loading=\"lazy\" decoding=\"async\"></figure><p>Ouvre ce manuel depuis <strong>Aide</strong> dans CyHub ou appuie sur <strong>F1</strong>.</p>\n",
+      "text": "CyHub rassemble les applications, bibliothèques, SDK et extensions dans un catalogue de bureau. Utilise la barre latérale pour passer des catégories aux mises à jour ou aux skills MCP. Premiers pas # Ouvrir CyHub et activer les mises à jour gérées . Retrouver un projet et vérifier sa publication GitHub . Installer, mettre à jour et ouvrir un projet géré . Connecter un client IA et trouver le skill d’un projet . L’interface # La barre latérale filtre le catalogue. La colonne centrale affiche les projets, leur description et leur icône. Sélectionne une ligne pour voir les versions, les actions disponibles et le guide MCP du projet. Ouvre ce manuel depuis Aide dans CyHub ou appuie sur F1 .",
+      "headings": [
+        {
+          "id": "start",
+          "text": "Premiers pas",
+          "level": 2
+        },
+        {
+          "id": "workspace",
+          "text": "L’interface",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [
+        "assets/catalogue.png"
+      ],
+      "links": [
+        "#/fr/installation/launch",
+        "#/fr/catalog/search",
+        "#/fr/updates/install",
+        "#/fr/mcp/connect"
+      ],
+      "kind": "media",
+      "revision": "dbacdaac9d1f"
+    },
+    {
+      "id": "updates",
+      "title": "Mises à jour",
+      "description": "Consulter les publications GitHub et installer les paquets Windows vérifiés.",
+      "section": "CyHub",
+      "parent": "overview",
+      "order": 3,
+      "sourceRevision": "1",
+      "locale": "fr",
+      "html": "<h2 id=\"check\">Vérifier les versions<a class=\"heading-anchor\" href=\"#/fr/updates/check\" aria-label=\"Lien vers Vérifier les versions\">#</a></h2><p>Choisis <strong>Vérifier sur GitHub</strong> pour le projet sélectionné ou <strong>Tout vérifier</strong> pour le catalogue. <strong>Mises à jour</strong> affiche les installations gérées pour lesquelles une version plus récente est disponible. Lorsqu’un projet a une publication sans paquet compatible, le lien GitHub permet de la consulter. Les vérifications utilisent l’API publique GitHub et suivent sa limite de requêtes.</p>\n<h2 id=\"install\">Installer ou mettre à jour<a class=\"heading-anchor\" href=\"#/fr/updates/install\" aria-label=\"Lien vers Installer ou mettre à jour\">#</a></h2><ol>\n<li>Active <a href=\"#/fr/installation/service\">CyHub Updater</a>.</li>\n<li>Sélectionne un projet, vérifie sa publication, puis clique sur <strong>Installer</strong> ou <strong>Mettre à jour</strong>.</li>\n<li>Attends que le service télécharge et vérifie le paquet. Clique sur <strong>Ouvrir l’application</strong> une fois l’installation prête. Pour un wheel géré, utilise <strong>Ouvrir le dossier</strong>.</li>\n</ol>\n<p>CyHub vérifie le SHA-256 publié et prépare la nouvelle version avant de l’activer. Les versions gérées précédentes restent dans <code>%ProgramFiles%\\CyHub\\Managed</code>. Les applications s’ouvrent dans ta session Windows. CyHub gère les installations qu’il crée.</p>\n",
+      "text": "Vérifier les versions # Choisis Vérifier sur GitHub pour le projet sélectionné ou Tout vérifier pour le catalogue. Mises à jour affiche les installations gérées pour lesquelles une version plus récente est disponible. Lorsqu’un projet a une publication sans paquet compatible, le lien GitHub permet de la consulter. Les vérifications utilisent l’API publique GitHub et suivent sa limite de requêtes. Installer ou mettre à jour # Active CyHub Updater . Sélectionne un projet, vérifie sa publication, puis clique sur Installer ou Mettre à jour . Attends que le service télécharge et vérifie le paquet. Clique sur Ouvrir l’application une fois l’installation prête. Pour un wheel géré, utilise Ouvrir le dossier . CyHub vérifie le SHA-256 publié et prépare la nouvelle version avant de l’activer. Les versions gérées précédentes restent dans %ProgramFiles%\\CyHub\\Managed . Les applications s’ouvrent dans ta session Windows. CyHub gère les installations qu’il crée.",
+      "headings": [
+        {
+          "id": "check",
+          "text": "Vérifier les versions",
+          "level": 2
+        },
+        {
+          "id": "install",
+          "text": "Installer ou mettre à jour",
+          "level": 2
+        }
+      ],
+      "anchors": [],
+      "languages": [],
+      "code": "",
+      "assets": [],
+      "links": [
+        "#/fr/installation/service"
+      ],
+      "kind": "guide",
+      "revision": "1c03d5aa3786"
+    }
+  ]
+}
