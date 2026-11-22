@@ -5,12 +5,14 @@ description: Find projects by name, description, or category and add your own en
 section: CyHub
 parent: overview
 order: 2
-revision: 2
+revision: 3
 ---
 
 ## Find a project {#search}
 
-Choose **All projects** or a category. Search by name, description or repository. The search matches both English and French descriptions, including accented words typed without accents. Select a row for the project description, versions and GitHub link.
+Choose **Projects** or a category, and switch between **List** and **Cards** in the toolbar. Search by name, description or repository. The search matches both English and French descriptions, including accented words typed without accents.
+
+Select a project to see its complete GitHub description, README, showcase link and available screenshots, and release notes. **VR applications** lists desktop tools. **Unreal plug-ins** and **VR plug-ins** offer release downloads or source archives.
 
 Choose **MCP Skills** to see projects with an integration guide. Each guide can be opened or copied from the project panel. See [MCP and skills](doc:mcp).
 

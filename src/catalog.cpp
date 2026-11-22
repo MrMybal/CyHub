@@ -164,12 +164,19 @@ std::string_view category_for(std::string_view category, std::string_view langua
         {"IA et automatisation", "AI and automation"},
         {"Bibliothèques et SDK", "Libraries and SDKs"},
         {"Unreal et VR", "Unreal and VR"},
+        {"Plugins Unreal", "Unreal plug-ins"},
+        {"Applications VR", "VR applications"},
+        {"Plugins VR", "VR plug-ins"},
     };
     for (const auto& [french, english] : categories) {
         if (category == french)
             return english;
     }
     return category;
+}
+
+bool download_only(const Project& project) {
+    return project.category == "Plugins Unreal" || project.category == "Plugins VR";
 }
 
 bool matches(const Project& project, std::string_view query) {

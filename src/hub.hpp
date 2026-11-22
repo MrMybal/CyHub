@@ -32,10 +32,18 @@ struct Asset {
     std::string name, url, sha256;
     std::uint64_t size = 0;
     std::string api_url;
+    bool authenticated = false;
 };
 struct Release {
     std::string tag, url;
     std::optional<Asset> asset;
+    std::string notes, published;
+};
+struct Preferences {
+    std::string language = "en";
+    std::string download_directory;
+    bool check_on_start = true;
+    bool cards = false;
 };
 
 struct Installed {
@@ -56,8 +64,14 @@ bool portable_path(std::string_view value);
 std::string fold(std::string_view value);
 bool matches(const Project& project, std::string_view query);
 std::string_view category_for(std::string_view category, std::string_view language);
+bool download_only(const Project& project);
 std::string load_language(const fs::path& file);
 void save_language(const fs::path& file, std::string_view language);
+Preferences load_preferences(const fs::path& file);
+void save_preferences(const fs::path& file, const Preferences& preferences);
+fs::path default_download_directory();
+std::string_view app_version();
+Project self_update_project();
 bool newer_version(std::string_view installed, std::string_view candidate);
 std::string package_entry(const Package& package, std::string_view tag);
 std::optional<Release> parse_release(const Project& project, const Json& data);
@@ -65,6 +79,7 @@ std::optional<Release> latest_release(const Project& project, const Cancellation
                                       std::string_view github_token = {});
 std::string github_project_token(const Project& project);
 std::optional<Release> discover_release(const Project& project, const Cancellation& cancel = {});
+std::vector<Release> release_history(const Project& project, const Cancellation& cancel = {});
 cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cancel,
                                  const cymcp::ChunkSink& sink, std::string_view github_token = {});
 
@@ -72,6 +87,7 @@ fs::path executable_directory();
 std::string file_url(const fs::path& file);
 fs::path managed_root();
 fs::path companion_root();
+fs::path user_projects_root();
 bool supports_packages();
 std::optional<Installed> installed_version(const fs::path& root, const Project& project);
 Job update_job(const fs::path& root, const Project& project);

@@ -9,8 +9,8 @@
     <td width="400" align="center" valign="middle"><img src="assets/icons/cyhub.png" width="112" alt="CyHub"></td>
     <td width="300" align="right" valign="top">
       <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
-      <p><sub>Version</sub><br><a href="VERSION.fr.md"><strong>0.3.1</strong></a><br><strong>EN DÉVELOPPEMENT</strong></p>
-      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.3.1"><strong>Préversion Windows x64</strong></a></p>
+      <p><sub>Version</sub><br><a href="VERSION.fr.md"><strong>0.4.0</strong></a><br><strong>EN DÉVELOPPEMENT</strong></p>
+      <p><a href="https://github.com/MrMybal/CyHub/releases"><strong>Préversion Windows x64</strong></a></p>
     </td>
   </tr>
 </table>
@@ -19,36 +19,37 @@
 
 CyHub rassemble les applications, bibliothèques, SDK et extensions de l’écosystème Cy dans un catalogue de bureau. Recherche un projet, consulte sa dernière publication GitHub et ouvre son guide MCP depuis la même fiche.
 
-> **EN DÉVELOPPEMENT · 0.3.1**
+> **EN DÉVELOPPEMENT · 0.4.0**
 >
 > La préversion Windows x64 inclut le bureau, le service de mise à jour, le serveur MCP et le manuel hors ligne. Voir les [notes de version et limites](VERSION.fr.md).
 
-[![Catalogue CyHub avec les icônes des projets et la fiche du projet sélectionné](Documentation/DocData/assets/catalogue.png)](Documentation/DocData/assets/catalogue.png)
+[![Catalogue CyHub en mode Cartes, avec la barre d’actions et les cases de sélection](Documentation/DocData/assets/catalogue.png)](Documentation/DocData/assets/catalogue.png)
 
 ## Le catalogue CyHub
 
-- **60 projets** regroupés par type, avec descriptions, icônes disponibles et liens vers les dépôts.
+- **61 projets** regroupés par type, avec descriptions, icônes disponibles et liens vers les dépôts.
+- Passe de la **Liste** aux **Cartes**. Les fiches affichent la description GitHub, le README, les images de vitrine disponibles et les notes de version.
 - **Applications installées** détecte automatiquement les projets du catalogue sous Windows. **Mises à jour** compare les versions installées connues aux publications GitHub accessibles.
-- **14 projets configurés pour l’installation gérée** par le service Windows. Le service vérifie le SHA-256 publié et reste actif après la fermeture de la fenêtre.
-- **32 skills MCP** à lire ou copier dans CyHub. Le serveur stdio fondé sur CyMCPSDK expose aussi le catalogue, les vérifications de version et les guides en lecture seule.
+- Coche plusieurs paquets compatibles et clique sur **Installer la sélection** pour les ajouter à la file. Les plugins Unreal et VR ont leurs propres rubriques de téléchargement.
+- **33 skills MCP** à lire ou copier dans CyHub. Le serveur stdio fondé sur CyMCPSDK expose aussi le catalogue, les vérifications de version et les guides en lecture seule.
 
-### Installer l’application recommandée
+### Applications recommandées
 
 [CyMCPHub](https://github.com/MrMybal/CyMCPHub) regroupe les skills, serveurs MCP, outils CLI et SDK dans un même espace. Clique sur **Installer CyMCPHub** dans le catalogue ou la vue Skills MCP. La préversion Windows inclut CyMCPHub 0.3.0 et l’installe pour ton compte sans droits administrateur.
 
-Ouvre CyMCPHub depuis CyHub pour charger la source MCP **CyHub**. Dans CyMCPHub, sélectionne ce connecteur et choisis **Skills → Collecter les skills du connecteur** pour ajouter les guides à sa bibliothèque. Utilise **Vérifier sur GitHub** dans la carte CyMCPHub pour les prochaines mises à jour. Pour le dépôt privé, lance CyHub avec une variable `GH_TOKEN` déjà configurée qui donne accès à ses publications. [Guide CyMCPHub](Documentation/Documentation.html#/fr/mcp/companion)
+Ouvre CyMCPHub depuis la barre d’actions de CyHub pour charger la source MCP **CyHub**. Dans CyMCPHub, sélectionne ce connecteur et choisis **Skills → Collecter les skills du connecteur** pour ajouter les guides à sa bibliothèque. Pour le dépôt privé, lance CyHub avec un `GH_TOKEN` qui donne accès à ses publications. [Guide CyMCPHub](Documentation/Documentation.html#/fr/mcp/companion)
+
+**CyModelHub** gère une bibliothèque locale de modèles IA. Les applications compatibles retrouvent et réutilisent les mêmes fichiers. Ouvre sa fiche depuis la barre d’actions pour accéder au dépôt et au guide MCP. CyHub propose l’installation pour ton compte Windows dès qu’une publication accessible contient une archive vérifiée `CyModelHub-<version>-windows-x64.zip`. [Guide CyModelHub](Documentation/Documentation.html#/fr/mcp/modelhub)
 
 ---
 
 ## Installation
 
-Télécharge `CyHub-windows-x64.zip` depuis la [préversion Windows x64](https://github.com/MrMybal/CyHub/releases/tag/v0.3.1) et extrais l’archive complète. Ouvre `CyHub.exe` dans le dossier extrait. Les binaires Windows utilisent le [runtime Microsoft Visual C++ x64](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
+Lance `CyHub-Setup-windows-x64.exe` pour une installation Windows par compte. Choisis l’installation pour tous les utilisateurs dans le dossier Program Files par défaut pour activer CyHub Updater. Tu peux aussi extraire et lancer le ZIP portable `CyHub-windows-x64.zip`. Les binaires Windows utilisent le [runtime Microsoft Visual C++ x64](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
 
-CyHub démarre en anglais. Dans la barre latérale, choisis **Language → Français**. CyHub mémorise ton choix.
+CyHub démarre en anglais. **Settings → Language → Français** permet de changer de langue. Les **Paramètres** mémorisent aussi le dossier de téléchargement et le contrôle GitHub au démarrage. **Aide** et **F1** ouvrent le manuel local.
 
-Pour activer l’installation gérée, ferme CyHub, ouvre PowerShell x64 en tant qu’administrateur et lance `Install-CyHub.ps1` depuis le dossier extrait. Ouvre ensuite `%ProgramFiles%\CyHub\CyHub.exe`. **Aide** et **F1** ouvrent le manuel local dans la langue sélectionnée.
-
-Pour mettre à jour CyHub lui-même, extrais le nouveau paquet dans un dossier vide. Si tu utilises le service Windows, ferme CyHub et relance le script d’installation depuis ce dossier. [Instructions de mise à jour](Documentation/Documentation.html#/fr/installation/upgrade)
+La version est affichée près du logo. **Mettre à jour CyHub** télécharge et vérifie l’installateur d’une publication GitHub plus récente, ouvre l’installation et ferme CyHub. Les publications privées nécessitent un `GH_TOKEN` avec accès en lecture. [Instructions de mise à jour](Documentation/Documentation.html#/fr/installation/upgrade)
 
 ## Sources et compilation
 

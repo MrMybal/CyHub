@@ -1,5 +1,6 @@
 #include "hub.hpp"
 
+#include <cstdlib>
 #include <system_error>
 #include <cwchar>
 #ifdef _WIN32
@@ -93,6 +94,25 @@ fs::path companion_root() {
            "CyHub" / "Companions";
 #else
     return {};
+#endif
+}
+
+fs::path user_projects_root() {
+#ifdef _WIN32
+    return companion_root().parent_path() / "Projects";
+#else
+    return {};
+#endif
+}
+
+std::string_view app_version() { return CYHUB_VERSION; }
+
+fs::path default_download_directory() {
+#ifdef _WIN32
+    return known_folder(FOLDERID_Downloads, "Could not locate Downloads.") / "CyHub";
+#else
+    const auto* home = std::getenv("HOME");
+    return home ? fs::u8path(home) / "Downloads" / "CyHub" : fs::temp_directory_path() / "CyHub";
 #endif
 }
 

@@ -4,6 +4,8 @@
 #include <miniz.h>
 #include <picosha2.h>
 #include <windows.h>
+#include <shellapi.h>
+#include <objbase.h>
 #include <array>
 #include <fstream>
 #include <iterator>
@@ -11,6 +13,21 @@
 
 namespace cyhub {
 namespace {
+void check_asset(const fs::path& path, const Asset& asset, const Cancellation& cancel = {}) {
+    if (!asset.size || asset.size > max_archive_size || fs::file_size(path) != asset.size)
+        throw std::runtime_error("The package size differs from the GitHub release.");
+    std::ifstream stream(path, std::ios::binary);
+    picosha2::hash256_one_by_one digest;
+    std::array<char, 64 * 1024> buffer{};
+    while (stream.read(buffer.data(), buffer.size()) || stream.gcount()) {
+        cancel.check();
+        digest.process(buffer.begin(), buffer.begin() + stream.gcount());
+    }
+    digest.finish();
+    if (stream.bad() || !stream.eof() || picosha2::get_hash_hex_string(digest) != asset.sha256)
+        throw std::runtime_error("The SHA-256 checksum does not match the GitHub release.");
+}
+
 struct Scratch {
     fs::path path;
     ~Scratch() {
@@ -34,6 +51,15 @@ struct CompanionLock {
     ~CompanionLock() { CloseHandle(handle); }
 };
 
+void publish_path(const fs::path& source, const fs::path& target, DWORD flags, const char* action) {
+    for (int retries = 0; !MoveFileExW(source.c_str(), target.c_str(), flags | MOVEFILE_WRITE_THROUGH); ++retries) {
+        const auto error = GetLastError();
+        if (retries >= 12 || (error != ERROR_ACCESS_DENIED && error != ERROR_SHARING_VIOLATION))
+            throw std::system_error(error, std::system_category(), action);
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    }
+}
+
 void write_state(const fs::path& path, const Json& json) {
     Scratch pending{path.native() + L".tmp"};
     {
@@ -43,13 +69,7 @@ void write_state(const fs::path& path, const Json& json) {
         if (!stream)
             throw std::runtime_error("Could not write the update state.");
     }
-    for (int retries = 0; !MoveFileExW(pending.path.c_str(), path.c_str(),
-             MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH); ++retries) {
-        const auto error = GetLastError();
-        if (retries >= 12 || (error != ERROR_ACCESS_DENIED && error != ERROR_SHARING_VIOLATION))
-            throw std::system_error(error, std::system_category(), "Publishing the update state");
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
-    }
+    publish_path(pending.path, path, MOVEFILE_REPLACE_EXISTING, "Publishing the update state");
 }
 
 struct ZipReader {
@@ -144,20 +164,7 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
     if (!release.asset || !project.windows_x64 || !valid_digest(release.asset->sha256))
         throw std::runtime_error("The Windows package cannot be verified.");
     const auto& asset = *release.asset;
-    if (!asset.size || asset.size > max_archive_size || fs::file_size(archive) != asset.size)
-        throw std::runtime_error("The package size differs from the GitHub release.");
-
-    std::ifstream stream(archive, std::ios::binary);
-    picosha2::hash256_one_by_one digest;
-    std::array<char, 64 * 1024> buffer{};
-    while (stream.read(buffer.data(), buffer.size()) || stream.gcount()) {
-        cancel.check();
-        digest.process(buffer.begin(), buffer.begin() + stream.gcount());
-    }
-    digest.finish();
-    if (stream.bad() || !stream.eof() || picosha2::get_hash_hex_string(digest) != asset.sha256)
-        throw std::runtime_error("The SHA-256 checksum does not match the GitHub release.");
-    stream.close();
+    check_asset(archive, asset, cancel);
 
     const auto project_root = root / project.id;
     const auto final = project_root / "versions" / asset.sha256;
@@ -167,7 +174,11 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
     const auto entry = fs::u8path(name);
     const auto complete = [&](const fs::path& location) {
         return fs::is_regular_file(location / entry) &&
-            (!is_companion(project) || fs::is_regular_file(location / "CyMCPHubMcp.exe"));
+            (!is_companion(project) || fs::is_regular_file(location / "CyMCPHubMcp.exe")) &&
+            (!is_model_companion(project) ||
+                (fs::is_regular_file(location / "CyModelHubService.exe") &&
+                 fs::is_regular_file(location / "CyModelHubMcp.exe") &&
+                 fs::is_regular_file(location / "CyModelHubCli.exe")));
     };
 
     if (!fs::exists(final)) {
@@ -178,11 +189,14 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
             extract_archive(archive, staging.path, cancel);
         else
             fs::copy_file(archive, staging.path / entry);
-        if (!complete(staging.path))
+        auto payload = staging.path;
+        if (is_model_companion(project) && !complete(payload))
+            payload /= fs::u8path(asset.name).stem();
+        if (!complete(payload))
             throw std::runtime_error("The main file is missing from the package.");
         cancel.check();
         fs::create_directories(final.parent_path());
-        fs::rename(staging.path, final);
+        publish_path(payload, final, 0, "Publishing the installed version");
     }
     if (!complete(final))
         throw std::runtime_error("The version directory is incomplete.");
@@ -230,6 +244,25 @@ void install_release(const fs::path& root, const Project& project, std::string_v
     install_package(root, {}, project, *release, cancel, {});
 }
 
+void install_user_release(const fs::path& root, const Project& project, const Release& release,
+                          const Cancellation& cancel) {
+    if (root.empty() || !project.windows_x64 || !release.asset || download_only(project) || project.id == "cyhub")
+        throw std::runtime_error("The requested package changed or is unavailable.");
+    const CompanionLock lock(root / project.id);
+    try {
+        install_package(root, {}, project, release, cancel,
+                        release.asset->authenticated ? github_project_token(project) : std::string{});
+        set_job(root, project, "done");
+    } catch (const std::exception& error) {
+        try {
+            set_job(root, project, "error", cymcp::redact_error_message(error.what()));
+        } catch (const std::exception&) {
+            // Keep the original installation failure.
+        }
+        throw;
+    }
+}
+
 void install_companion(const fs::path& root, const fs::path& directory, const Project& project,
                        const Release& release, const Cancellation& cancel) {
     if (!is_companion(project) || root.empty() || !release.asset)
@@ -260,5 +293,73 @@ bool open_companion(const fs::path& root, const fs::path& directory,
     write_state(config, companion_mcp_config(directory));
     open_installed(installed_entry(root, project, installed), true, config);
     return running != nullptr;
+}
+
+fs::path download_release_file(const Project& project, const Release& release,
+                              const fs::path& destination, const Cancellation& cancel) {
+    if (destination.empty() || !destination.is_absolute() || !release.asset ||
+        !valid_digest(release.asset->sha256) || !portable_path(release.asset->name) ||
+        release.asset->name.find('/') != std::string::npos)
+        throw std::runtime_error("The Windows package cannot be verified.");
+
+    fs::create_directories(destination);
+    GUID id{};
+    wchar_t unique[40]{};
+    if (FAILED(CoCreateGuid(&id)) || !StringFromGUID2(id, unique, ARRAYSIZE(unique)))
+        throw std::runtime_error("Could not create the download file.");
+    Scratch partial{destination / (std::wstring(unique) + L".part")};
+    std::ofstream output(partial.path, std::ios::binary | std::ios::trunc);
+    if (!output)
+        throw std::runtime_error("Could not create the download file.");
+    const auto response = download_asset(*release.asset, cancel, [&](const char* bytes, std::size_t count) {
+        output.write(bytes, static_cast<std::streamsize>(count));
+        return static_cast<bool>(output);
+    }, github_project_token(project));
+    output.close();
+    if (response.status != 200 || !output)
+        throw std::runtime_error("Download incomplete or refused (HTTP " + std::to_string(response.status) + ").");
+    cancel.check();
+    check_asset(partial.path, *release.asset, cancel);
+    const auto name = fs::u8path(release.asset->name);
+    auto final = destination / name;
+    for (unsigned suffix = 1; !MoveFileExW(partial.path.c_str(), final.c_str(), MOVEFILE_WRITE_THROUGH); ++suffix) {
+        const auto code = GetLastError();
+        if (suffix == 100 || (code != ERROR_ALREADY_EXISTS && code != ERROR_FILE_EXISTS))
+            throw std::system_error(code, std::system_category(), "Could not save the download");
+        final = destination / (name.stem().native() + L"-" + std::to_wstring(suffix) + name.extension().native());
+    }
+    return final;
+}
+
+void launch_self_installer(const fs::path& installer, const Asset& asset) {
+    if (asset.name != self_update_project().windows_x64->asset || installer.extension() != L".exe")
+        throw std::runtime_error("The Windows package cannot be verified.");
+    const auto process_dir = executable_directory();
+    wchar_t registered[32768]{};
+    DWORD bytes = sizeof(registered);
+    const auto key = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{822B880C-CFA7-44BD-9EA4-D69930730C53}_is1";
+    const auto entry = RegGetValueW(HKEY_LOCAL_MACHINE, key, L"InstallLocation",
+                                   RRF_RT_REG_SZ | RRF_SUBKEY_WOW6464KEY, nullptr, registered, &bytes);
+    auto system_directory = fs::path(registered);
+    if (!system_directory.has_filename())
+        system_directory = system_directory.parent_path();
+    const bool system_scope = _wcsicmp(process_dir.c_str(), managed_root().parent_path().c_str()) == 0 ||
+        (entry == ERROR_SUCCESS && _wcsicmp(process_dir.c_str(), system_directory.c_str()) == 0);
+    const HANDLE file = CreateFileW(installer.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                    FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    if (file == INVALID_HANDLE_VALUE)
+        throw std::runtime_error("Could not open the verified installer.");
+    struct CloseFile { HANDLE handle; ~CloseFile() { CloseHandle(handle); } } lock{file};
+    FILE_ATTRIBUTE_TAG_INFO info{};
+    if (!GetFileInformationByHandleEx(file, FileAttributeTagInfo, &info, sizeof(info)) ||
+        (info.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
+        throw std::runtime_error("Could not open the verified installer.");
+    check_asset(installer, asset);
+    // The installer remembers its registered directory. Portable copies use the normal wizard.
+    const wchar_t* parameters = system_scope ? L"/ALLUSERS" : L"/CURRENTUSER";
+    const auto result = ShellExecuteW(nullptr, L"open", installer.c_str(), parameters, process_dir.c_str(),
+                                     SW_SHOWNORMAL);
+    if (reinterpret_cast<INT_PTR>(result) <= 32)
+        throw std::runtime_error("Could not launch the verified installer.");
 }
 }

@@ -9,8 +9,13 @@ void activate_archive(const fs::path& root, const Project& project, const Releas
                       const fs::path& archive, const Cancellation& cancel);
 void install_release(const fs::path& root, const Project& project, std::string_view tag,
                      const Cancellation& cancel);
+void install_user_release(const fs::path& root, const Project& project, const Release& release,
+                          const Cancellation& cancel);
 void install_companion(const fs::path& root, const fs::path& directory, const Project& project,
                        const Release& release, const Cancellation& cancel);
 bool open_companion(const fs::path& root, const fs::path& directory,
                     const Project& project, const Installed& installed);
+fs::path download_release_file(const Project& project, const Release& release,
+                              const fs::path& destination, const Cancellation& cancel);
+void launch_self_installer(const fs::path& installer, const Asset& asset);
 }

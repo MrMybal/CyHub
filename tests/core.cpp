@@ -1,5 +1,6 @@
 #include "hub.hpp"
 #include "companion.hpp"
+#include "github_project.hpp"
 
 #include <iostream>
 #ifdef _WIN32
@@ -69,8 +70,12 @@ int main(int argc, char** argv) {
         const auto catalog = load_catalog(fs::u8path(argv[1]));
         const auto* ui = find_project(catalog, "cyui");
         const auto* companion = find_project(catalog, "cymcphub");
+        const auto* modelhub = find_project(catalog, "cymodelhub");
         check(companion && is_companion(*companion) && companion->windows_x64.has_value(),
               "CyMCPHub is a managed companion");
+        check(modelhub && is_model_companion(*modelhub) && modelhub->windows_x64 &&
+              package_entry(*modelhub->windows_x64, "v0.1.0") == "CyModelHub.exe",
+              "CyModelHub has an independent Windows package");
         const auto bridge = companion_mcp_config(fs::u8path(argv[1]).parent_path());
         check(bridge["mcpServers"]["CyHub"]["command"].get<std::string>().find("CyHubMCP") != std::string::npos,
               "CyMCPHub can discover the CyHub stdio server");
@@ -135,6 +140,30 @@ int main(int argc, char** argv) {
             (companion_release->asset && companion_release->asset->api_url ==
                 "https://api.github.com/repos/MrMybal/CyMCPHub/releases/assets/123")),
             "private update uses the verified GitHub asset ID");
+        const auto self = self_update_project();
+        check(self.repo == "MrMybal/CyHub" && !app_version().empty(), "fixed CyHub update identity");
+        const auto setup = self.windows_x64->asset;
+        Json update_asset{
+            {"name", setup}, {"id", 42}, {"state", "uploaded"}, {"size", 256},
+            {"digest", "sha256:" + std::string(64, 'b')},
+            {"browser_download_url", self.url() + "/releases/download/v9.0.0/" + setup}};
+        Json update_metadata{{"tag_name", "v9.0.0"}, {"assets", Json::array({update_asset})},
+            {"body", "Release notes"}, {"published_at", "2026-01-12T10:30:00Z"}, {"prerelease", true}};
+        const auto update = parse_release(self, update_metadata);
+        check(update && update->notes == "Release notes" && update->published.starts_with("2026-01-12") &&
+            update->asset.has_value() == supports_packages(), "CyHub release contains installer, notes and date");
+        update_metadata["assets"][0]["name"] = "OtherSetup.exe";
+        check(!parse_release(self, update_metadata)->asset, "CyHub only accepts its installer asset name");
+        const auto* plugin = find_project(catalog, "cy_ism_utilities");
+        const auto* vr = find_project(catalog, "cyvr_questdev");
+        check(plugin && download_only(*plugin) && vr && !download_only(*vr), "plug-ins and VR applications are distinct");
+        if (argc == 3 && std::string_view(argv[2]) == "--live-project") {
+            const auto page = github_project(self, {});
+            check(!page.description.empty() && !page.readme.empty() && !page.releases.empty(),
+                  "live GitHub project metadata, README and releases");
+            check(!page.images.empty(), "live GitHub README artwork");
+            std::cout << page.releases.size() << " releases and " << page.images.size() << " images\n";
+        }
 
         const auto scratch = fs::temp_directory_path() /
             ("cyhub-test-" + std::to_string(cymcp::Clock::now().time_since_epoch().count()));
@@ -146,8 +175,36 @@ int main(int argc, char** argv) {
             check(load_language(preferences) == "fr", "French selection persists");
             save_language(preferences, "en");
             check(load_language(preferences) == "en", "language preference is replaced");
+            save_preferences(preferences, {"fr", "D:/Downloads/CyHub", false, true});
+            save_language(preferences, "en");
+            const auto options = load_preferences(preferences);
+            check(options.language == "en" && options.cards && !options.check_on_start &&
+                options.download_directory == "D:/Downloads/CyHub", "language preserves catalog and download preferences");
 #ifdef _WIN32
             packages(*ui, scratch);
+            if (argc == 6 && std::string_view(argv[2]) == "--model-bundle") {
+                const fs::path archive = fs::u8path(argv[4]);
+                const auto asset_name = cymcp::path_utf8(archive.filename());
+                const Release release{argv[3], "", Asset{asset_name, "", argv[5], fs::file_size(archive)}};
+                const auto root = scratch / "models";
+                activate_archive(root, *modelhub, release, archive, {});
+                const auto installed = installed_version(root, *modelhub);
+                check(installed && installed->version == release.tag, "activate wrapped CyModelHub ZIP");
+                const auto entry = installed_entry(root, *modelhub, *installed);
+                check(fs::is_regular_file(entry) &&
+                      fs::is_regular_file(entry.parent_path() / "CyModelHubService.exe"),
+                      "CyModelHub layout is runnable after extraction");
+            }
+            if (argc == 3 && std::string_view(argv[2]) == "--live-project") {
+                auto portable = self;
+                portable.windows_x64->asset = "CyHub-windows-x64.zip";
+                const auto current = discover_release(portable);
+                check(current && current->asset, "published CyHub archive with GitHub SHA-256");
+                const auto file = download_release_file(portable, *current, scratch / "downloads", {});
+                check(fs::is_regular_file(file) && fs::file_size(file) == current->asset->size,
+                      "downloaded and verified the private GitHub asset");
+                std::cout << "Verified an authenticated CyHub release download\n";
+            }
             if (argc == 4 && std::string_view(argv[2]) == "--companion") {
                 const auto directory = fs::u8path(argv[3]);
                 const auto bundle = bundled_companion(directory);

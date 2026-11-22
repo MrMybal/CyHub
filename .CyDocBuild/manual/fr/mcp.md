@@ -5,7 +5,7 @@ description: Connecter un client IA à CyHub et lire les guides des projets.
 section: CyHub
 parent: overview
 order: 4
-sourceRevision: 4
+sourceRevision: 6
 ---
 
 ## Connecter un client MCP {#connect}
@@ -29,10 +29,18 @@ Choisis **Skills MCP**, sélectionne un projet et clique sur **Lire le skill**. 
 
 [CyMCPHub](https://github.com/MrMybal/CyMCPHub) est l’application recommandée pour retrouver tes skills, serveurs MCP, outils CLI et SDK au même endroit.
 
-1. Clique sur **Installer CyMCPHub** dans l’accueil de CyHub ou dans **Skills MCP**. La préversion Windows x64 fournit un paquet vérifié qui s’installe pour le compte en cours.
+1. Clique sur **Installer CyMCPHub** dans la barre d’actions. La préversion Windows x64 fournit un paquet vérifié qui s’installe pour le compte en cours.
 2. Clique sur **Ouvrir CyMCPHub** dans CyHub. CyMCPHub démarre avec le connecteur **CyHub** en lecture seule.
 3. Dans CyMCPHub, sélectionne le connecteur **CyHub** dans **Serveurs MCP**, puis choisis **Skills → Collecter les skills du connecteur** pour ajouter les guides à la bibliothèque.
 
 Clique sur **Vérifier sur GitHub** pour rechercher une version plus récente de CyMCPHub. Les publications GitHub utilisent une archive vérifiée nommée `CyMCPHub-<version>-windows-x64.zip`. Pour vérifier et installer les publications du dépôt privé, lance CyHub avec une variable `GH_TOKEN` qui donne accès en lecture au dépôt. Le paquet inclus peut être installé hors ligne.
 
 Si CyMCPHub est déjà ouvert, quitte-le depuis la zone de notification et rouvre-le depuis CyHub pour charger le connecteur ou utiliser la nouvelle version. La bibliothèque et les paramètres restent dans le profil utilisateur de CyMCPHub.
+
+## Partager les modèles IA avec CyModelHub {#modelhub}
+
+[CyModelHub](https://github.com/MrMybal/CyModelHub) tient un catalogue local partagé de modèles IA. Les applications compatibles réutilisent les mêmes fichiers une fois le modèle référencé ou installé.
+
+Choisis **CyModelHub** dans la barre d’actions pour ouvrir sa fiche. **Lire le skill** explique comment connecter son serveur MCP et retrouver les modèles disponibles. **Vérifier sur GitHub** recherche une publication accessible. Sous Windows x64, CyHub peut installer une archive vérifiée `CyModelHub-<version>-windows-x64.zip` pour ton compte. Utilise un `GH_TOKEN` avec accès en lecture tant que le dépôt est privé.
+
+La version 0.3.0 de CyMCPHub incluse importe jusqu’à 32 skills par connecteur. Ouvre **Skills MCP** dans CyHub ou utilise `list_project_skills` pour parcourir tout le catalogue.

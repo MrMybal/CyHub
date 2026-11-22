@@ -12,10 +12,13 @@ int main() {
         const auto catalog = load_catalog(directory / "catalog.json");
         const auto root = managed_root();
         const auto local_companions = companion_root();
+        const auto local_projects = user_projects_root();
         cymcp::Registry operations(cymcp::Policy::allow_all());
         const Json output_schema = {{"type", "object"}};
         const auto describe = [&](const Project& project, const InstallationInventory& inventory) {
-            const auto installed = installed_version(is_companion(project) ? local_companions : root, project);
+            auto installed = installed_version(is_companion(project) ? local_companions : root, project);
+            if (!installed && !is_companion(project))
+                installed = installed_version(local_projects, project);
             const auto detected = inventory.find(project.id);
             const auto version = installed ? installed->version :
                 detected != inventory.end() ? detected->second.version : "";
@@ -102,7 +105,7 @@ int main() {
             [&](const Json& args, const cymcp::CallContext&) {
                 auto items = Json::array();
                 const auto query = args.value("query", "");
-                const auto limit = args.value("limit", std::size_t{32});
+                const auto limit = args.value("limit", catalog.size());
                 for (const auto& project : catalog) {
                     if (!project.skill.empty() && matches(project, query))
                         items.push_back({{"id", project.id}, {"name", project.skill}, {"title", project.name}});

@@ -4,7 +4,7 @@ title: CyHub
 description: Parcourir les projets, vérifier leurs versions et trouver les guides MCP.
 section: CyHub
 order: 0
-sourceRevision: 3
+sourceRevision: 4
 ---
 
 CyHub rassemble les applications, bibliothèques, SDK et extensions dans un catalogue de bureau. Utilise la barre latérale pour passer des catégories aux mises à jour ou aux skills MCP.
@@ -24,7 +24,7 @@ La barre latérale filtre le catalogue. La colonne centrale affiche les projets,
 {"id":"catalog","src":"assets/catalogue.png","alt":"CyHub en français avec la liste des projets, leurs icônes et le sélecteur de langue","controls":"minimal"}
 ```
 
-CyHub démarre en anglais. Dans la barre latérale, choisis **Language → Français**. Ton choix est mémorisé pour le prochain démarrage.
+CyHub démarre en anglais. Choisis **Settings → Language → Français**. Ton choix est mémorisé pour le prochain démarrage.
 
 Ouvre ce manuel avec **Aide** ou **F1**. Le manuel s’ouvre dans la langue sélectionnée.
 

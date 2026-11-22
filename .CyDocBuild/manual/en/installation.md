@@ -5,20 +5,20 @@ description: Start the Windows desktop app and enable the update service.
 section: CyHub
 parent: overview
 order: 1
-revision: 6
+revision: 7
 ---
 
 ## Launch CyHub {#launch}
 
-1. Download `CyHub-windows-x64.zip` from the [GitHub preview](https://github.com/MrMybal/CyHub/releases/tag/v0.3.1) and extract it into a folder.
-2. Open `CyHub.exe`. Keep the catalog, icons, skills and `Documentation` beside the executable.
-3. Select a project and choose **Check on GitHub** to see its latest release.
+1. Run `CyHub-Setup-windows-x64.exe` and select installation for your Windows account.
+2. Launch **CyHub** from the Start menu.
+3. Open **Settings** to choose your language, download folder and startup update checks.
 
-The app uses the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist). The portable catalog, skills and manual are available from the extracted folder.
+The app uses the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist). For portable use, extract `CyHub-windows-x64.zip` and open `CyHub.exe` from the extracted folder.
 
 ## Enable managed updates {#service}
 
-Close CyHub before installation. From a PowerShell x64 window running as administrator, run `Install-CyHub.ps1` from the extracted package. Then open `%ProgramFiles%\CyHub\CyHub.exe`.
+Select installation for all users and keep the default Program Files location to enable the service. With the portable ZIP, run `Install-CyHub.ps1` from an administrator PowerShell x64 window.
 
 The sidebar shows **Service running** when CyHub Updater is running. The update service uses the Windows LocalService account. It continues a requested update after the app window closes.
 
@@ -26,8 +26,8 @@ Run `Uninstall-CyHubService.ps1` as administrator to remove the service. The app
 
 ## Update CyHub itself {#upgrade}
 
-1. Close CyHub and extract the newer package into a fresh folder.
-2. For portable use, open `CyHub.exe` from the new folder. Copy any project entries and icons you added to the new catalog and assets.
-3. If you use CyHub Updater, run `Install-CyHub.ps1` as administrator from the new folder. Merge your custom catalog entries before running the script because it copies the catalog from the package.
+1. Click **Check CyHub** below the version in the sidebar.
+2. When **Update CyHub** appears, click it to download the newer release's installer and check its size and SHA-256 against GitHub.
+3. Follow the installer when CyHub closes. Select the same installation scope to update an existing installation.
 
-The installer replaces the application and service files. It preserves managed project versions in `%ProgramFiles%\CyHub\Managed` and the saved language in your Windows profile.
+If the release only provides a portable ZIP, **Update CyHub** opens that release. The installer preserves Windows user preferences and managed project versions. Merge custom catalog entries into the distribution before replacing its packaged catalog.

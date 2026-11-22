@@ -9,8 +9,8 @@
     <td width="400" align="center" valign="middle"><img src="assets/icons/cyhub.png" width="112" alt="CyHub"></td>
     <td width="300" align="right" valign="top">
       <p><a href="LICENSE"><strong>GNU GPL v3</strong></a></p>
-      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.3.1</strong></a><br><strong>IN DEVELOPMENT</strong></p>
-      <p><a href="https://github.com/MrMybal/CyHub/releases/tag/v0.3.1"><strong>Windows x64 preview</strong></a></p>
+      <p><sub>Version</sub><br><a href="VERSION.md"><strong>0.4.0</strong></a><br><strong>IN DEVELOPMENT</strong></p>
+      <p><a href="https://github.com/MrMybal/CyHub/releases"><strong>Windows x64 preview</strong></a></p>
     </td>
   </tr>
 </table>
@@ -19,36 +19,37 @@
 
 CyHub brings the Cy ecosystem's applications, libraries, SDKs and extensions into one desktop catalog. Find a project, check its latest GitHub release and open its MCP guide from the same project panel.
 
-> **IN DEVELOPMENT · 0.3.1**
+> **IN DEVELOPMENT · 0.4.0**
 >
 > The Windows x64 preview includes the desktop app, update service, MCP server and offline manual. See the [version notes and limitations](VERSION.md).
 
-[![English CyHub catalog with project icons, the language picker and project details](Documentation/DocData/assets/catalog.png)](Documentation/DocData/assets/catalog.png)
+[![CyHub catalog in List mode with the compact toolbar and project checkboxes](Documentation/DocData/assets/catalog.png)](Documentation/DocData/assets/catalog.png)
 
 ## The CyHub catalog
 
-- **60 projects** organized by type, with descriptions, available artwork and repository links.
+- **61 projects** organized by type, with descriptions, available artwork and repository links.
+- Switch between **List** and **Cards**. Project details show the GitHub description, README, available showcase images and release notes.
 - **Installed apps** automatically finds catalog projects on Windows. **Updates** compares known installed versions with accessible GitHub releases.
-- **14 projects configured for managed installation** through the Windows service. The service verifies the published SHA-256 and continues working after the window closes.
-- **32 MCP skills** to read or copy in CyHub. The CyMCPSDK stdio server also exposes the catalog, release checks and guides through read-only tools.
+- Select several compatible packages and use **Install selected** to queue them together. Unreal and VR plug-ins have their own download views.
+- **33 MCP skills** to read or copy in CyHub. The CyMCPSDK stdio server also exposes the catalog, release checks and guides through read-only tools.
 
-### Install the recommended companion
+### Recommended companion apps
 
 [CyMCPHub](https://github.com/MrMybal/CyMCPHub) brings skills, MCP servers, CLI tools and SDKs into one workspace. Use **Install CyMCPHub** in the CyHub catalog or the MCP Skills view. The Windows preview includes CyMCPHub 0.3.0 and installs it for your account without administrator access.
 
-Open CyMCPHub from CyHub to load the **CyHub** MCP source. In CyMCPHub, select that connector and choose **Skills → Collect connector skills** to add the CyHub guides to its library. Use **Check on GitHub** in the companion card for future updates. For the private repository, run CyHub with an existing `GH_TOKEN` that can read its releases. [Companion guide](Documentation/Documentation.html#/en/mcp/companion)
+Open CyMCPHub from the CyHub toolbar to load the **CyHub** MCP source. In CyMCPHub, select that connector and choose **Skills → Collect connector skills** to add the CyHub guides to its library. For the private repository, run CyHub with an existing `GH_TOKEN` that can read its releases. [Companion guide](Documentation/Documentation.html#/en/mcp/companion)
+
+**CyModelHub** maintains a shared local library of AI models. Compatible applications can find and reuse the same model files. Open its project page from the toolbar to see the repository and MCP guide. CyHub offers installation for the current Windows account when an accessible release includes a verified `CyModelHub-<version>-windows-x64.zip`. [CyModelHub guide](Documentation/Documentation.html#/en/mcp/modelhub)
 
 ---
 
 ## Installation
 
-Download `CyHub-windows-x64.zip` from the [Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.3.1) and extract the complete archive. Open `CyHub.exe` in the extracted folder. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
+Run `CyHub-Setup-windows-x64.exe` for a per-user Windows installation. Select the all-users installation in the default Program Files location to enable CyHub Updater. The portable `CyHub-windows-x64.zip` can also be extracted and run directly. The Windows binaries use the [Microsoft Visual C++ x64 runtime](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist).
 
-CyHub starts in English. Use **Language** in the sidebar to switch to French. CyHub remembers your choice.
+CyHub starts in English. **Settings** in the sidebar saves the language, download folder and GitHub startup check. Use **Help** or **F1** to open the offline manual.
 
-To enable managed installs, close CyHub, open PowerShell x64 as administrator and run `Install-CyHub.ps1` from the extracted folder. Then launch `%ProgramFiles%\CyHub\CyHub.exe`. Use **Help** or press **F1** to open the local manual in the selected language.
-
-To update CyHub itself, extract the new package into a fresh folder. If you use the Windows service, close CyHub and rerun the installer from that folder. [Update instructions](Documentation/Documentation.html#/en/installation/upgrade)
+The version is shown next to the CyHub logo. **Update CyHub** downloads and verifies the installer from a newer GitHub release, opens setup and closes CyHub. Private releases require `GH_TOKEN` with read access. [Update instructions](Documentation/Documentation.html#/en/installation/upgrade)
 
 ## Source and build
 
@@ -63,6 +64,8 @@ Compress-Archive -Path dist/CyHub -DestinationPath dist/CyHub-windows-x64.zip -F
 ```
 
 You can also build with Ninja from **x64 Native Tools for VS 2022**. Configure with `-G Ninja -DCMAKE_BUILD_TYPE=Release`. CMake fetches pinned revisions of CyUI, CyMCPSDK, SDL3 and miniz. Use `FETCHCONTENT_SOURCE_DIR_CYUI`, `FETCHCONTENT_SOURCE_DIR_CYMCPSDK`, `FETCHCONTENT_SOURCE_DIR_SDL3` or `FETCHCONTENT_SOURCE_DIR_MINIZ` to use existing checkouts.
+
+To build the standalone installer with Inno Setup 6, run `./scripts/Build-CyHubInstaller.ps1 -BuildDirectory build/windows -Iscc <path-to-ISCC.exe>`. Include the installer as a GitHub release asset under its generated name to enable in-app updates.
 
 To include CyMCPHub for offline installation, pass `-DCYHUB_CYMCPHUB_PACKAGE=path/to/CyMCPHub-0.3.0-windows-x64.zip` when configuring CMake. Use the portable archive with `CyMCPHub.exe` and `CyMCPHubMcp.exe` at its root.
 

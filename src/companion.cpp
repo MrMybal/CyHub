@@ -5,6 +5,10 @@ bool is_companion(const Project& project) {
     return project.id == "cymcphub" && project.repo == "MrMybal/CyMCPHub";
 }
 
+bool is_model_companion(const Project& project) {
+    return project.id == "cymodelhub" && project.repo == "MrMybal/CyModelHub";
+}
+
 std::string companion_github_token(const Project& project) {
     return is_companion(project) ? github_project_token(project) : "";
 }

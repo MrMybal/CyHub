@@ -117,22 +117,33 @@ std::string package_entry(const Package& package, std::string_view tag) {
     return parsed ? replace_version(package.entry, parsed->label) : "";
 }
 
+Project self_update_project() {
+    return {"cyhub", "CyHub", "", "", "", "MrMybal/CyHub",
+            Package{"CyHub-Setup-windows-x64.exe", "CyHub.exe"}, "", true};
+}
+
 std::optional<Release> parse_release(const Project& project, const Json& data) {
     if (data.value("draft", false) || (data.value("prerelease", false) && !project.include_prerelease))
         return std::nullopt;
     const std::string tag = data.at("tag_name");
-    Release release{tag, project.url() + "/releases", {}};
+    const auto body = data.find("body");
+    const auto published = data.find("published_at");
+    Release release{tag, project.url() + "/releases", {},
+                    body != data.end() && body->is_string() ? body->get<std::string>() : "",
+                    published != data.end() && published->is_string() ? published->get<std::string>() : ""};
     if (url_token(tag))
         release.url += "/tag/" + encoded_tag(tag);
     const auto v = version(tag);
-    if (!v || !project.windows_x64 || !supports_packages())
+    const bool plugin = download_only(project);
+    if ((!project.windows_x64 && !plugin) || !v || !supports_packages())
         return release;
 
-    const auto name = replace_version(project.windows_x64->asset, v->label);
-    const auto expected_url = project.url() + "/releases/download/" + encoded_tag(tag) + "/" + encoded_tag(name);
     for (const auto& item : data.at("assets")) {
-        if (item.value("name", "") != name || item.value("state", "") != "uploaded")
+        const auto name = item.value("name", "");
+        if (!url_token(name) || item.value("state", "") != "uploaded" ||
+            (plugin ? !fold(name).ends_with(".zip") : name != replace_version(project.windows_x64->asset, v->label)))
             continue;
+        const auto expected_url = project.url() + "/releases/download/" + encoded_tag(tag) + "/" + encoded_tag(name);
         const auto digest = item.contains("digest") && item["digest"].is_string()
             ? item["digest"].get<std::string>() : std::string{};
         const auto size = item.value("size", std::uint64_t{0});
@@ -143,34 +154,43 @@ std::optional<Release> parse_release(const Project& project, const Json& data) {
             if (id)
                 release.asset->api_url = "https://api.github.com/repos/" + project.repo +
                     "/releases/assets/" + std::to_string(id);
+            break;
         }
-        break;
     }
     return release;
 }
 
-std::optional<Release> latest_release(const Project& project, const Cancellation& cancel,
-                                      std::string_view github_token) {
-    if (project.repo.empty())
-        return std::nullopt;
+namespace {
+Json fetch_release_json(const Project& project, std::string_view route, const Cancellation& cancel,
+                        std::string_view github_token) {
     cymcp::HttpRequest request;
-    request.url = "https://api.github.com/repos/" + project.repo +
-        (project.include_prerelease ? "/releases?per_page=10" : "/releases/latest");
+    request.url = "https://api.github.com/repos/" + project.repo + std::string(route);
     request.headers["Accept"] = "application/vnd.github+json";
     if (!github_token.empty())
         request.headers["Authorization"] = "Bearer " + std::string(github_token);
     request.timeout = std::chrono::seconds(12);
-    request.max_response_bytes = 1024 * 1024;
+    request.max_response_bytes = 4 * 1024 * 1024;
     const auto response = cymcp::HttpClient{}.perform(request, cancel);
     if (response.status == 404)
-        return std::nullopt;
+        return nullptr;
     const auto quota = response.headers.find("x-ratelimit-remaining");
     if (response.status == 429 || (response.status == 403 &&
         (response.headers.contains("retry-after") || (quota != response.headers.end() && quota->second == "0"))))
         throw cymcp::Error("GitHubLimit", "GitHub rate limit reached. Try again later.");
     if (response.status != 200)
         throw std::runtime_error("GitHub returned HTTP " + std::to_string(response.status) + ".");
-    const auto data = cymcp::parse_json(response.body);
+    return cymcp::parse_json(response.body);
+}
+}
+
+std::optional<Release> latest_release(const Project& project, const Cancellation& cancel,
+                                      std::string_view github_token) {
+    if (project.repo.empty())
+        return std::nullopt;
+    const auto data = fetch_release_json(project, project.include_prerelease ? "/releases?per_page=10" :
+        "/releases/latest", cancel, github_token);
+    if (data.is_null())
+        return std::nullopt;
     if (project.include_prerelease) {
         for (const auto& entry : data)
             if (auto release = parse_release(project, entry))
@@ -178,6 +198,19 @@ std::optional<Release> latest_release(const Project& project, const Cancellation
         return std::nullopt;
     }
     return parse_release(project, data);
+}
+
+std::vector<Release> release_history(const Project& project, const Cancellation& cancel) {
+    if (project.repo.empty())
+        return {};
+    auto source = project;
+    source.include_prerelease = true;
+    const auto data = fetch_release_json(source, "/releases?per_page=30", cancel, github_project_token(source));
+    std::vector<Release> history;
+    for (const auto& entry : data)
+        if (auto release = parse_release(source, entry))
+            history.push_back(std::move(*release));
+    return history;
 }
 
 std::string github_project_token(const Project& project) {
@@ -195,13 +228,14 @@ std::string github_project_token(const Project& project) {
 
 std::optional<Release> discover_release(const Project& project, const Cancellation& cancel) {
     const auto token = github_project_token(project);
-    if (is_companion(project))
+    if (is_companion(project) || project.id == "cyhub" || download_only(project))
         return latest_release(project, cancel, token);
     auto release = latest_release(project, cancel);
     if (!release && !token.empty() && !cancel.cancelled()) {
         release = latest_release(project, cancel, token);
-        // The elevated update service uses public package URLs.
-        if (release)
+        if (release && release->asset && !release->asset->api_url.empty())
+            release->asset->authenticated = true;
+        else if (release)
             release->asset.reset();
     }
     return release;
@@ -212,7 +246,13 @@ cymcp::HttpResponse download_asset(const Asset& asset, const Cancellation& cance
     cymcp::HttpRequest request;
     request.url = asset.url;
     if (!github_token.empty()) {
-        if (!asset.api_url.starts_with("https://api.github.com/repos/MrMybal/CyMCPHub/releases/assets/"))
+        constexpr std::string_view prefix = "https://api.github.com/repos/MrMybal/";
+        const auto endpoint = std::string_view(asset.api_url);
+        constexpr std::string_view route = "/releases/assets/";
+        const auto route_start = endpoint.find(route, prefix.size());
+        if (!endpoint.starts_with(prefix) || route_start == std::string_view::npos ||
+            !url_token(endpoint.substr(prefix.size(), route_start - prefix.size())) ||
+            !numeric(endpoint.substr(route_start + route.size())))
             throw std::runtime_error("The authenticated GitHub asset is unavailable.");
         request.url = asset.api_url;
         request.headers["Authorization"] = "Bearer " + std::string(github_token);

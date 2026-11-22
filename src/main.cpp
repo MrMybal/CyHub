@@ -88,8 +88,12 @@ int run(SDL_Window* window, SDL_Renderer* renderer, const cyhub::fs::path& prefe
                     throw std::runtime_error(SDL_GetError());
             }
             SDL_RenderPresent(renderer);
-            if (frame_limit && ++frames >= frame_limit)
-                active = false;
+            if (frame_limit) {
+                if (++frames >= frame_limit)
+                    active = false;
+                else
+                    SDL_Delay(25);
+            }
         }
     } catch (const std::exception& error) {
         if (frame_limit)
@@ -139,7 +143,7 @@ int main(int argc, char** argv) {
             if (directory)
                 preferences = cyhub::fs::u8path(directory.get()) / "settings.json";
         }
-        result = run(window, renderer, preferences, smoke ? 8 : 0, smoke && argc > 2 ? argv[2] : nullptr);
+        result = run(window, renderer, preferences, smoke ? 28 : 0, smoke && argc > 2 ? argv[2] : nullptr);
         (void)vsync;
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);

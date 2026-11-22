@@ -5,7 +5,7 @@ description: Connect CyHub to an AI client and read a project guide.
 section: CyHub
 parent: overview
 order: 4
-revision: 4
+revision: 6
 ---
 
 ## Connect an MCP client {#connect}
@@ -29,10 +29,18 @@ Choose **MCP Skills**, select a project, and click **Read skill**. Copy the Mark
 
 [CyMCPHub](https://github.com/MrMybal/CyMCPHub) is the recommended companion for finding skills, MCP servers, CLI tools and SDKs in one place.
 
-1. Choose **Install CyMCPHub** on the CyHub home page or in **MCP Skills**. The Windows x64 preview includes a verified package and installs it for the current account.
+1. Choose **Install CyMCPHub** in the toolbar. The Windows x64 preview includes a verified package and installs it for the current account.
 2. Choose **Open CyMCPHub** in CyHub. This starts CyMCPHub with the read-only **CyHub** connector.
 3. In CyMCPHub, select the **CyHub** connector under **MCP servers**, then choose **Skills → Collect connector skills** to add the guides to its library.
 
 Choose **Check on GitHub** to look for a newer CyMCPHub version. GitHub releases use a verified asset named `CyMCPHub-<version>-windows-x64.zip`. To check and install releases from the private repository, start CyHub with a `GH_TOKEN` that has read access to the repository. The included package can be installed offline.
 
 If CyMCPHub is already running, quit it from its tray menu and open it again from CyHub to load the connector or use the new version. The CyMCPHub library and settings stay in its user profile.
+
+## Share AI models with CyModelHub {#modelhub}
+
+[CyModelHub](https://github.com/MrMybal/CyModelHub) keeps a shared local catalog of AI models. Compatible applications can use the same files after a model has been registered or installed once.
+
+Choose **CyModelHub** in the toolbar to open its project page. **Read skill** explains how to connect its MCP server and look up existing models. **Check on GitHub** looks for an accessible release. On Windows x64, CyHub can install a verified `CyModelHub-<version>-windows-x64.zip` for your account. Use a `GH_TOKEN` with read access while the repository is private.
+
+The bundled CyMCPHub 0.3.0 imports up to 32 skills from a connector. Use CyHub's **MCP Skills** view or `list_project_skills` to browse the full catalog.

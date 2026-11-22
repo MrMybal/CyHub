@@ -1,13 +1,15 @@
-# CyHub 0.3.1
+# CyHub 0.4.0
 
 [Français](VERSION.fr.md) · [README](README.md)
 
 **Status:** In development.
 
-[Windows x64 preview](https://github.com/MrMybal/CyHub/releases/tag/v0.3.1)
+[Windows x64 preview](https://github.com/MrMybal/CyHub/releases)
 
 ## Included
 
+- CyModelHub recommended in the toolbar and catalog, with a guide for sharing local AI models through MCP.
+- Windows installer and verified GitHub self-updates, compact List and Cards modes, batch installs and richer project pages.
 - CyHub logo in the desktop window, catalog and Windows executable icon, with the same artwork in both READMEs.
 - Automatic Windows installation detection at startup, with an Installed apps view and GitHub update checks for known installed versions.
 - Installed status, version and source in the MCP catalog.

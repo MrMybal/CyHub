@@ -5,12 +5,14 @@ description: Rechercher par nom, description ou catégorie et ajouter des projet
 section: CyHub
 parent: overview
 order: 2
-sourceRevision: 2
+sourceRevision: 3
 ---
 
 ## Trouver un projet {#search}
 
-Sélectionne **Tous les projets** ou une catégorie. Recherche un nom, une description ou un dépôt. La recherche parcourt les descriptions anglaises et françaises, même si tu saisis les mots sans accents. Ouvre la fiche d’un projet pour lire sa description, comparer ses versions et accéder à GitHub.
+Sélectionne **Projets** ou une catégorie et passe de la **Liste** aux **Cartes** dans la barre d’actions. Recherche un nom, une description ou un dépôt. La recherche parcourt les descriptions anglaises et françaises, même si tu saisis les mots sans accents.
+
+Ouvre une fiche pour lire la description GitHub complète, le README, voir le lien de vitrine et les captures disponibles, puis consulter les notes de version. **Applications VR** regroupe les outils de bureau. **Plugins Unreal** et **Plugins VR** proposent les téléchargements des publications ou les archives des sources.
 
 Choisis **Skills MCP** pour afficher les projets qui proposent un guide d’intégration. La fiche du projet permet de lire et de copier son guide. Voir [MCP et skills](doc:mcp).
 

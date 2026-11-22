@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(CyHub VERSION 0.3.1 LANGUAGES C CXX)
+project(CyHub VERSION 0.4.0 LANGUAGES C CXX)
 include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -33,19 +33,19 @@ FetchContent_Declare(sdl3 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
   GIT_TAG a962f40bbba175e9716557a25d5d7965f134a3d3)
 FetchContent_MakeAvailable(cyui cymcpsdk sdl3)
 
-add_library(cyhub_core STATIC src/catalog.cpp src/companion.cpp src/installed_apps.cpp src/preferences.cpp src/releases.cpp src/platform.cpp)
+add_library(cyhub_core STATIC src/catalog.cpp src/companion.cpp src/github_project.cpp src/installed_apps.cpp src/preferences.cpp src/releases.cpp src/platform.cpp)
 target_include_directories(cyhub_core PUBLIC src)
 target_link_libraries(cyhub_core PUBLIC CyMCP::Http)
+target_compile_definitions(cyhub_core PRIVATE CYHUB_VERSION="${PROJECT_VERSION}")
 if(WIN32)
   target_sources(cyhub_core PRIVATE src/windows_pipe.cpp)
-  target_compile_definitions(cyhub_core PRIVATE CYHUB_VERSION="${PROJECT_VERSION}")
   target_link_libraries(cyhub_core PUBLIC shell32 ole32 advapi32 version uuid)
 endif()
 
-add_executable(CyHub src/main.cpp src/dashboard.cpp src/localization.cpp
+add_executable(CyHub src/main.cpp src/dashboard.cpp src/dashboard_content.cpp src/localization.cpp
   ${cyui_SOURCE_DIR}/third_party/imgui-sdl3/imgui_impl_sdl3.cpp
   ${cyui_SOURCE_DIR}/third_party/imgui-sdl3/imgui_impl_sdlrenderer3.cpp)
-target_include_directories(CyHub PRIVATE ${cyui_SOURCE_DIR}/third_party/imgui-sdl3)
+target_include_directories(CyHub PRIVATE ${cyui_SOURCE_DIR}/third_party/imgui-sdl3 ${cyui_SOURCE_DIR}/third_party/stb)
 target_link_libraries(CyHub PRIVATE cyhub_core CyUI::Core SDL3::SDL3-static)
 if(WIN32)
   enable_language(RC)
@@ -128,6 +128,7 @@ install(FILES ${cyui_SOURCE_DIR}/LICENSE DESTINATION licenses RENAME CyUI.txt CO
 install(FILES ${cymcpsdk_SOURCE_DIR}/LICENSE DESTINATION licenses RENAME CyMCPSDK.txt COMPONENT CyHub)
 install(FILES ${sdl3_SOURCE_DIR}/LICENSE.txt DESTINATION licenses RENAME SDL3.txt COMPONENT CyHub)
 install(FILES ${cyui_SOURCE_DIR}/third_party/imgui/LICENSE.txt DESTINATION licenses RENAME DearImGui.txt COMPONENT CyHub)
+install(FILES ${cyui_SOURCE_DIR}/third_party/stb/LICENSE DESTINATION licenses RENAME stb.txt COMPONENT CyHub)
 install(FILES ${cymcpsdk_SOURCE_DIR}/third_party/nlohmann/LICENSE.MIT DESTINATION licenses RENAME nlohmann-json.txt COMPONENT CyHub)
 install(FILES ${cymcpsdk_SOURCE_DIR}/third_party/httplib/LICENSE DESTINATION licenses RENAME cpp-httplib.txt COMPONENT CyHub)
 

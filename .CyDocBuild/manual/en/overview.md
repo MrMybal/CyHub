@@ -4,7 +4,7 @@ title: CyHub
 description: Browse projects, check releases and find MCP guides.
 section: CyHub
 order: 0
-revision: 3
+revision: 4
 ---
 
 CyHub brings applications, libraries, SDKs and extensions into a searchable desktop catalog. Use the sidebar to move between project categories, updates and MCP skills.
@@ -24,7 +24,7 @@ The sidebar filters the catalog. The middle column lists projects with their des
 {"id":"catalog","src":"assets/catalog.png","alt":"CyHub in English with the project list, icons and language selector","controls":"minimal"}
 ```
 
-CyHub starts in English. Use **Language** in the sidebar to switch to French. Your preference is saved for the next launch.
+CyHub starts in English. Open **Settings → Language** to switch to French. Your preference is saved for the next launch.
 
 Open this manual with **Help** or **F1**. It opens in the selected language.
 
